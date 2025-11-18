@@ -241,7 +241,31 @@ class NaverStoreCrawler:
                     # Linux/macOS: 기본 경로 사용
                     logger.warning("ChromeDriver 실행 파일을 찾을 수 없어 webdriver-manager 기본 경로 사용")
                     logger.warning("이 경우 webdriver-manager가 자동으로 ChromeDriver를 다운로드하거나 찾을 것입니다.")
-                    service = Service()
+                    # Windows가 아닌 경우에도 138 버전 사용 (휴대폰 Chrome 버전과 일치)
+                    if system == 'Windows':
+                        logger.info("Windows에서 138 버전의 ChromeDriver를 다운로드합니다...")
+                        service = None
+                        try:
+                            win64_manager = Win64ChromeDriverManager(driver_version="138")
+                            win64_driver_path = win64_manager.install()
+                            if os.path.isfile(win64_driver_path) and win64_driver_path.endswith('.exe'):
+                                service = Service(win64_driver_path)
+                            else:
+                                # 디렉토리인 경우 chromedriver.exe 찾기
+                                search_path = win64_driver_path if os.path.isdir(win64_driver_path) else os.path.dirname(win64_driver_path)
+                                for root, dirs, files in os.walk(search_path):
+                                    for file in files:
+                                        if file == 'chromedriver.exe' and 'win64' in root:
+                                            service = Service(os.path.join(root, file))
+                                            break
+                                    if service:
+                                        break
+                                if not service:
+                                    service = Service()
+                        except:
+                            service = Service()
+                    else:
+                        service = Service()
                     
         except Exception as e:
             logger.error(f"ChromeDriverManager 오류: {e}")
@@ -266,8 +290,32 @@ class NaverStoreCrawler:
                     logger.error("  python fix_chromedriver.py --remove-win32 138")
                     raise RuntimeError(f"ChromeDriver 설정 실패: {e}. win64 버전을 다운로드하세요.")
             else:
-                logger.warning("webdriver-manager가 자동으로 ChromeDriver를 처리할 것입니다.")
-                service = Service()
+                # Windows가 아닌 경우에도 138 버전 사용 (휴대폰 Chrome 버전과 일치)
+                if system == 'Windows':
+                    logger.warning("Windows에서 138 버전의 ChromeDriver를 다운로드합니다...")
+                    service = None
+                    try:
+                        win64_manager = Win64ChromeDriverManager(driver_version="138")
+                        win64_driver_path = win64_manager.install()
+                        if os.path.isfile(win64_driver_path) and win64_driver_path.endswith('.exe'):
+                            service = Service(win64_driver_path)
+                        else:
+                            # 디렉토리인 경우 chromedriver.exe 찾기
+                            search_path = win64_driver_path if os.path.isdir(win64_driver_path) else os.path.dirname(win64_driver_path)
+                            for root, dirs, files in os.walk(search_path):
+                                for file in files:
+                                    if file == 'chromedriver.exe' and 'win64' in root:
+                                        service = Service(os.path.join(root, file))
+                                        break
+                                if service:
+                                    break
+                            if not service:
+                                service = Service()
+                    except:
+                        service = Service()
+                else:
+                    logger.warning("webdriver-manager가 자동으로 ChromeDriver를 처리할 것입니다.")
+                    service = Service()
         
         try:
             logger.info("Chrome 드라이버 생성 시도 중...")

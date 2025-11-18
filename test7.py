@@ -47,7 +47,7 @@ class StealthNaverCrawler:
         options = uc.ChromeOptions()
         
         # 모바일 Chrome 원격 디버깅
-        options.debugger_address = f"127.0.0.1:{self.port}"
+        options.add_experimental_option("debuggerAddress", f"127.0.0.1:{self.port}")
         
         # undetected-chromedriver는 자동으로 자동화 탐지 회피 옵션을 처리하므로
         # excludeSwitches와 useAutomationExtension은 제거
