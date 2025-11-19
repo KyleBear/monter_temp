@@ -16,7 +16,7 @@ from test6 import DataConnectionManager
 from adb_manager import get_adb_manager
 import pandas as pd
 import threading
-import requests  # 추가
+import requests
 # 로깅 설정
 logging.basicConfig(
     level=logging.INFO,

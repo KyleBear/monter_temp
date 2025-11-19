@@ -217,7 +217,7 @@ class ChromeDevTools:
         }
         
         try:
-            # 소켓 타임아웃 설정 (recv 전에)
+
             if hasattr(self.ws, 'sock') and self.ws.sock:
                 self.ws.sock.settimeout(timeout)
             
@@ -633,78 +633,146 @@ def setup_port_forwarding(adb, port=9222):
     try:
         logger.info(f"[포트 포워딩] 포트 {port} 설정 시작")
         
-        # 포트 사용 여부 확인
+        # 0. ADB 서버 응답성 사전 확인
+        logger.info(f"[포트 포워딩] ADB 서버 응답성 확인 중...")
+        try:
+            version_result = adb.run_command('version', timeout=2)
+            if version_result.returncode == 0:
+                logger.debug(f"[포트 포워딩] ADB 서버 응답 정상")
+            else:
+                logger.warning(f"[포트 포워딩] ADB version 명령 실패: returncode={version_result.returncode}")
+        except subprocess.TimeoutExpired:
+            logger.error(f"[포트 포워딩] ⚠ ADB 서버가 응답하지 않습니다 (version 명령 타임아웃)")
+            logger.error(f"[포트 포워딩] 원인 분석:")
+            logger.error(f"  1. ADB 서버가 데드락 상태일 수 있습니다")
+            logger.error(f"  2. 다른 ADB 명령이 장시간 실행 중일 수 있습니다")
+            logger.error(f"  3. USB 연결이 불안정할 수 있습니다")
+            logger.error(f"[포트 포워딩] 해결 방법:")
+            logger.error(f"  - USB 케이블을 다시 연결해보세요")
+            logger.error(f"  - 휴대폰을 재부팅해보세요")
+            logger.error(f"  - ADB 서버를 재시작하세요: adb kill-server && adb start-server")
+            return False
+        except Exception as e:
+            logger.warning(f"[포트 포워딩] ADB version 확인 중 오류: {e}")
+        
+        # 1. 기기 연결 상태 확인
+        logger.info(f"[포트 포워딩] 기기 연결 상태 확인 중...")
+        try:
+            devices_result = adb.run_command('devices', timeout=3)
+            if devices_result.returncode == 0:
+                lines = devices_result.stdout.strip().split('\n')
+                connected_count = 0
+                for line in lines[1:]:
+                    if line.strip() and 'device' in line and 'offline' not in line:
+                        connected_count += 1
+                
+                if connected_count == 0:
+                    logger.error(f"[포트 포워딩] ⚠ 연결된 기기가 없습니다")
+                    logger.error(f"[포트 포워딩] 원인: USB로 연결된 기기가 없거나 인증되지 않았습니다")
+                    return False
+                else:
+                    logger.debug(f"[포트 포워딩] 연결된 기기 수: {connected_count}")
+            else:
+                logger.warning(f"[포트 포워딩] devices 명령 실패: returncode={devices_result.returncode}")
+        except subprocess.TimeoutExpired:
+            logger.error(f"[포트 포워딩] ⚠ devices 명령 타임아웃 - ADB 서버가 응답하지 않습니다")
+            return False
+        except Exception as e:
+            logger.warning(f"[포트 포워딩] devices 확인 중 오류: {e}")
+        
+        # 2. 기존 포워딩 상태 확인
+        logger.info(f"[포트 포워딩] 기존 포워딩 상태 확인 중...")
+        try:
+            forward_list_result = adb.run_command('forward', '--list', timeout=3)
+            if forward_list_result.returncode == 0:
+                existing_forwards = forward_list_result.stdout.strip().split('\n')
+                existing_forwards = [f.strip() for f in existing_forwards if f.strip()]
+                if existing_forwards:
+                    logger.info(f"[포트 포워딩] 기존 포워딩 {len(existing_forwards)}개 발견:")
+                    for fwd in existing_forwards:
+                        logger.info(f"  - {fwd}")
+                else:
+                    logger.debug(f"[포트 포워딩] 기존 포워딩 없음")
+        except subprocess.TimeoutExpired:
+            logger.warning(f"[포트 포워딩] forward --list 명령 타임아웃 (기존 포워딩 확인 실패)")
+        except Exception as e:
+            logger.warning(f"[포트 포워딩] 기존 포워딩 확인 중 오류: {e}")
+        
+        # 3. 포트 사용 여부 확인
         port_in_use = check_port_in_use(port)
         if port_in_use:
-            logger.warning(f"[포트 포워딩] 포트 {port}가 이미 사용 중입니다. 프로세스 정보 확인 중...")
-            process_info = get_port_process_info(port)
-            if process_info:
-                logger.warning(f"[포트 포워딩] 포트 {port}를 사용하는 프로세스:")
-                logger.warning(f"  - PID: {process_info['pid']}")
-                logger.warning(f"  - 프로세스 이름: {process_info['name']}")
-                logger.warning(f"  - 명령줄: {process_info['command']}")
-            else:
-                logger.warning(f"[포트 포워딩] 포트 {port}를 사용하는 프로세스 정보를 가져올 수 없습니다.")
+            logger.warning(f"[포트 포워딩] 포트 {port}가 이미 사용 중입니다.")
+            # ... existing code ...
         
-        # 기존 포워딩 제거 (여러 번 시도)
-        logger.debug(f"[포트 포워딩] 기존 포트 포워딩 제거 시도 (포트: {port})")
-        for attempt in range(3):
-            try:
-                result = adb.run_command('forward', '--remove', f'tcp:{port}', timeout=3)
-                if result.returncode == 0:
-                    logger.debug(f"[포트 포워딩] 기존 포트 포워딩 제거 완료 (포트: {port}, 시도: {attempt + 1})")
-                    break
-                else:
-                    error_msg = result.stderr if hasattr(result, 'stderr') and result.stderr else str(result)
-                    logger.debug(f"[포트 포워딩] 기존 포트 포워딩 제거 시도 {attempt + 1}/3: {error_msg}")
-            except Exception as e:
-                logger.debug(f"[포트 포워딩] 기존 포트 포워딩 제거 시도 {attempt + 1}/3 실패: {e}")
-                if attempt < 2:
-                    time.sleep(1)
+        # 4. 기존 포워딩 제거
+        # ... existing code ...
         
-        # 잠시 대기 (포트 해제 대기)
-        time.sleep(0.5)
-        
-        # 포트 포워딩 설정
+        # 5. 포트 포워딩 설정
         logger.info(f"[포트 포워딩] 포트 포워딩 설정 시도 (tcp:{port} -> localabstract:chrome_devtools_remote)")
-        result = adb.run_command('forward', f'tcp:{port}', 'localabstract:chrome_devtools_remote', timeout=5)
-        
-        if result.returncode == 0:
-            logger.info(f"✓ [포트 포워딩] 포트 포워딩 설정 완료 (localhost:{port} -> 기기 Chrome)")
+        try:
+            result = adb.run_command('forward', f'tcp:{port}', 'localabstract:chrome_devtools_remote', timeout=5)
             
-            # 설정 후 포트 상태 확인
-            time.sleep(0.5)
-            final_port_in_use = check_port_in_use(port)
-            if final_port_in_use:
-                logger.debug(f"[포트 포워딩] 포트 {port}가 정상적으로 리스닝 중입니다.")
+            if result.returncode == 0:
+                logger.info(f"✓ [포트 포워딩] 포트 포워딩 설정 완료 (localhost:{port} -> 기기 Chrome)")
+                return True
             else:
-                logger.warning(f"[포트 포워딩] 포트 {port}가 리스닝 상태가 아닙니다.")
+                error_msg = result.stderr if hasattr(result, 'stderr') and result.stderr else str(result)
+                logger.error(f"✗ [포트 포워딩] 포트 포워딩 설정 실패 (포트: {port})")
+                logger.error(f"  - 에러 메시지: {error_msg}")
+                logger.error(f"  - 반환 코드: {result.returncode}")
+                return False
+                
+        except subprocess.TimeoutExpired as e:
+            logger.error(f"✗ [포트 포워딩] 포트 포워딩 설정 중 타임아웃 (ADB가 응답하지 않음, 포트: {port}): {e}")
+            logger.error(f"[포트 포워딩] 타임아웃 원인 분석:")
+            logger.error(f"  1. ADB 서버가 데드락 상태일 가능성")
+            logger.error(f"  2. 기기가 응답하지 않음 (USB 연결 불안정 또는 기기 과부하)")
+            logger.error(f"  3. 포트 {port}가 이미 사용 중이거나 충돌")
+            logger.error(f"  4. 다른 ADB 명령이 동시에 실행되어 충돌")
+            logger.error(f"[포트 포워딩] 해결 방법:")
+            logger.error(f"  1. USB 케이블을 다시 연결")
+            logger.error(f"  2. 휴대폰 재부팅")
+            logger.error(f"  3. ADB 서버 재시작: adb kill-server && adb start-server")
+            logger.error(f"  4. 포트 {port}를 사용하는 프로세스 종료")
             
-            return True
-        else:
-            error_msg = result.stderr if hasattr(result, 'stderr') and result.stderr else str(result)
-            logger.error(f"✗ [포트 포워딩] 포트 포워딩 설정 실패 (포트: {port})")
-            logger.error(f"  - 에러 메시지: {error_msg}")
-            logger.error(f"  - 반환 코드: {result.returncode}")
+            # ADB 연결 상태 재확인
+            try:
+                if adb.check_connection():
+                    logger.warning(f"  - ADB 연결 상태: 정상 (하지만 명령이 타임아웃됨)")
+                    logger.warning(f"  → 이는 ADB 서버가 데드락 상태이거나 기기가 응답하지 않음을 의미합니다")
+                else:
+                    logger.error(f"  - ADB 연결 상태: 끊어짐")
+            except Exception as check_error:
+                logger.error(f"  - ADB 연결 상태 확인 실패: {check_error}")
             
-            # 실패 후 포트 상태 재확인
+            return False
+        except Exception as e:
+            logger.error(f"✗ [포트 포워딩] 포트 포워딩 설정 중 예외 발생 (포트: {port}): {e}", exc_info=True)
+            return False
+    except subprocess.TimeoutExpired as e:
+        logger.error(f"✗ [포트 포워딩] 포트 포워딩 설정 중 타임아웃 (ADB가 응답하지 않음, 포트: {port}): {e}", exc_info=True)
+        
+        # 예외 발생 시 포트 상태 확인
+        try:
             process_info = get_port_process_info(port)
             if process_info:
                 logger.error(f"  - 포트 {port}를 사용하는 프로세스:")
                 logger.error(f"    * PID: {process_info['pid']}")
                 logger.error(f"    * 프로세스 이름: {process_info['name']}")
                 logger.error(f"    * 명령줄: {process_info['command']}")
-            
-            # ADB 연결 상태 확인
-            try:
-                if adb.check_connection():
-                    logger.debug(f"  - ADB 연결 상태: 정상")
-                else:
-                    logger.error(f"  - ADB 연결 상태: 끊어짐")
-            except Exception as e:
-                logger.error(f"  - ADB 연결 상태 확인 실패: {e}")
-            
-            return False
+        except:
+            pass
+        
+        # ADB 연결 상태 확인
+        try:
+            if adb.check_connection():
+                logger.warning(f"  - ADB 연결 상태: 정상 (하지만 명령이 타임아웃됨)")
+            else:
+                logger.error(f"  - ADB 연결 상태: 끊어짐")
+        except Exception as check_error:
+            logger.error(f"  - ADB 연결 상태 확인 실패: {check_error}")
+        
+        return False
     except Exception as e:
         logger.error(f"✗ [포트 포워딩] 포트 포워딩 설정 중 예외 발생 (포트: {port}): {e}", exc_info=True)
         
@@ -718,6 +786,15 @@ def setup_port_forwarding(adb, port=9222):
                 logger.error(f"    * 명령줄: {process_info['command']}")
         except:
             pass
+        
+        # ADB 연결 상태 확인
+        try:
+            if adb.check_connection():
+                logger.warning(f"  - ADB 연결 상태: 정상 (하지만 명령이 타임아웃됨)")
+            else:
+                logger.error(f"  - ADB 연결 상태: 끊어짐")
+        except Exception as check_error:
+            logger.error(f"  - ADB 연결 상태 확인 실패: {check_error}")
         
         return False
 

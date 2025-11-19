@@ -234,19 +234,13 @@ def close_chrome():
         return False
 
 
-def open_chrome(url=None):
-    """휴대폰에서 Chrome 앱 시작"""
+def open_chrome(url='https://m.naver.com'):
+    """휴대폰에서 Chrome 앱 시작 (기본 URL: m.naver.com)"""
     try:
-        if url:
-            logger.info(f"Chrome 앱을 {url}로 시작 중...")
-            # 특정 URL로 Chrome 시작
-            result = run_adb_command('shell', 'am', 'start', '-a', 'android.intent.action.VIEW', 
-                                     '-d', url, 'com.android.chrome')
-        else:
-            logger.info("Chrome 앱 시작 중...")
-            # Chrome 메인 화면으로 시작
-            result = run_adb_command('shell', 'am', 'start', '-n', 
-                                     'com.android.chrome/com.google.android.apps.chrome.Main')
+        logger.info(f"Chrome 앱을 {url}로 시작 중...")
+        # 특정 URL로 Chrome 시작
+        result = run_adb_command('shell', 'am', 'start', '-a', 'android.intent.action.VIEW', 
+                                 '-d', url, 'com.android.chrome')
         
         if result.returncode == 0:
             logger.info("✓ Chrome 앱 시작 완료")

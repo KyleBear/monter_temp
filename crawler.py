@@ -265,7 +265,7 @@ class NaverStoreCrawler:
                         except:
                             service = Service()
                     else:
-                        service = Service()
+                    service = Service()
                     
         except Exception as e:
             logger.error(f"ChromeDriverManager 오류: {e}")
@@ -313,9 +313,9 @@ class NaverStoreCrawler:
                                 service = Service()
                     except:
                         service = Service()
-                else:
-                    logger.warning("webdriver-manager가 자동으로 ChromeDriver를 처리할 것입니다.")
-                    service = Service()
+            else:
+                logger.warning("webdriver-manager가 자동으로 ChromeDriver를 처리할 것입니다.")
+                service = Service()
         
         try:
             logger.info("Chrome 드라이버 생성 시도 중...")

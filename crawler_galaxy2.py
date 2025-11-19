@@ -112,7 +112,32 @@ class ChromeDevTools:
                 return False
             
             # WebSocket 연결 (타임아웃 30초로 증가)
-            self.ws = websocket.create_connection(self.ws_url, timeout=30)
+            # origin 헤더를 설정하여 origin 검증 우회
+            try:
+                # websocket-client 라이브러리에서 origin 설정
+                self.ws = websocket.create_connection(
+                    self.ws_url, 
+                    timeout=30,
+                    origin=None,  # origin을 None으로 설정하여 검증 우회 시도
+                    header={
+                        'Origin': ''  # 빈 origin 헤더
+                    }
+                )
+            except TypeError:
+                # origin 파라미터를 지원하지 않는 경우
+                try:
+                    # origin 없이 연결 시도
+                    self.ws = websocket.create_connection(self.ws_url, timeout=30)
+                except Exception as e:
+                    # origin 오류인 경우 특별 처리
+                    if '403' in str(e) or 'Forbidden' in str(e) or 'origin' in str(e).lower():
+                        logger.error(f"[Chrome DevTools] origin 검증 오류: {e}")
+                        logger.error(f"[Chrome DevTools] 해결 방법:")
+                        logger.error(f"  1. Android Chrome을 --remote-allow-origins 플래그로 시작해야 합니다")
+                        logger.error(f"  2. 하지만 Android에서는 am start로 직접 플래그 전달이 어렵습니다")
+                        logger.error(f"  3. 대안: Chrome의 원격 디버깅 설정 확인 또는 Chrome 재설치")
+                        raise
+                    raise
             # 소켓 레벨 타임아웃 설정 (recv 타임아웃)
             self.ws.sock.settimeout(30)
             logger.info("✓ Chrome DevTools 연결 완료")

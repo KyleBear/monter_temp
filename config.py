@@ -41,5 +41,6 @@ class Config:
     # USB 연결된 휴대폰 Chrome 설정
     # USE_REMOTE_DEVICE = os.getenv('USE_REMOTE_DEVICE', 'False').lower() == 'true'  # True: 실제 휴대폰 사용, False: PC Chrome 사용
     USE_REMOTE_DEVICE = 'True'  # True: 실제 휴대폰 사용, False: PC Chrome 사용
-    REMOTE_DEBUGGING_PORT = int(os.getenv('REMOTE_DEBUGGING_PORT', 9222))  # Chrome 원격 디버깅 포트
-
+    # USE_REMOTE_DEVICE = 'False'  # True: 실제 휴대폰 사용, False: PC Chrome 사용
+    # REMOTE_DEBUGGING_PORT = int(os.getenv('REMOTE_DEBUGGING_PORT', 9222))  # Chrome 원격 디버깅 포트
+    REMOTE_DEBUGGING_PORT = 9222

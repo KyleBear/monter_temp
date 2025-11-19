@@ -1638,18 +1638,6 @@ def test_mobile_chrome_crawling_cdtp(
         enable_airplane_mode_on_chrome_start: Chrome 시작 시 비행기 모드 켰다 끄기 여부 (IP 변경용)
     """
     config = Config()
-    logger.info("=" * 70)
-    logger.info("휴대폰 Chrome 직접 제어 크롤링 테스트 (Chrome DevTools Protocol)")
-    logger.info("=" * 70)
-    logger.info(f"메인 키워드: {config.MAIN_KEYWORD_LIST}")
-    logger.info(f"기본 검색 키워드: {config.BASE_SEARCH_KEYWORD_LIST}")
-    logger.info(f"반복 횟수: {config.REPEAT_COUNT}")
-    logger.info(f"NV MID: {config.NV_MID}")
-    logger.info(f"Chrome 재시작: {'매 반복마다' if restart_chrome_each_iteration else '사용 안함'}")
-    logger.info(f"비행기 모드: {'크롬 시작 시 켰다 끄기 (IP 변경용)' if enable_airplane_mode_on_chrome_start else '사용 안함'}")
-
-
-    logger.info("=" * 70)
     
     # ADB Manager 초기화 (test3.py 방식)
     adb = get_adb_manager()

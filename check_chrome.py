@@ -234,38 +234,26 @@ def check_chromedriver():
         
         # 파일 크기 확인
         file_size = os.path.getsize(driver_path)
-        print(f"[INFO] 파일 크기: {file_size:,} bytes ({file_size / 1024 / 1024:.2f} MB)")
-        
-        # 접근 권한 확인
-        print("\n접근 권한 확인:")
         
         # 읽기 권한
         if os.access(driver_path, os.R_OK):
-            print(f"[OK] 읽기 권한: 있음")
         else:
-            print(f"[FAIL] 읽기 권한: 없음")
             return False
         
         # 실행 권한 (Windows에서는 항상 True)
         if system == 'Windows':
-            print(f"[OK] 실행 권한: Windows에서는 기본적으로 실행 가능")
         else:
             if os.access(driver_path, os.X_OK):
-                print(f"[OK] 실행 권한: 있음")
             else:
-                print(f"[WARN] 실행 권한: 없음 (chmod +x로 추가 필요)")
-                print(f"       실행: chmod +x \"{driver_path}\"")
         
         # 파일 권한 상세 정보 (Unix 계열)
         if system != 'Windows':
             try:
                 stat_info = os.stat(driver_path)
-                print(f"[INFO] 파일 권한 (8진수): {oct(stat_info.st_mode)}")
             except Exception as e:
                 logger.debug(f"권한 정보 조회 실패: {e}")
         
         # 실제 실행 테스트
-        print("\n실행 테스트:")
         try:
             if system == 'Windows':
                 # Windows에서는 --version 옵션으로 테스트
@@ -285,20 +273,14 @@ def check_chromedriver():
             
             if result.returncode == 0:
                 version = result.stdout.strip()
-                print(f"[OK] ChromeDriver 실행 성공")
-                print(f"[INFO] ChromeDriver 버전: {version}")
                 return True
             else:
-                print(f"[FAIL] ChromeDriver 실행 실패 (반환 코드: {result.returncode})")
                 if result.stderr:
-                    print(f"[ERROR] {result.stderr}")
                 return False
         except Exception as e:
-            print(f"[FAIL] ChromeDriver 실행 테스트 실패: {e}")
             return False
         
     except Exception as e:
-        print(f"[FAIL] ChromeDriver 확인 중 오류: {e}")
         import traceback
         traceback.print_exc()
         return False
