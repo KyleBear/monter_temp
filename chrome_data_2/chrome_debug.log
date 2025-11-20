@@ -1,42 +1,26 @@
-[15764:19576:1119/202208.335:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:206] No machine level policy manager exists.
-[13152:19752:1119/202208.444:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
-[16276:16364:1119/202208.446:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
-[19948:1540:1119/202208.462:VERBOSE1:components\viz\service\main\viz_main_impl.cc:86] VizNullHypothesis is disabled (not a warning)
-[344:13848:1119/202208.718:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
-[19000:10760:1119/202208.779:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
-[15764:19576:1119/202209.018:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202209.354:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202209.419:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202209.711:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[344:5500:1119/202209.789:ERROR:media\base\status.h:517] DecoderStatus::0
-[15764:13728:1119/202213.043:ERROR:google_apis\gcm\engine\registration_request.cc:292] Registration response error message: DEPRECATED_ENDPOINT
-[15764:19576:1119/202216.009:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202216.856:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202221.033:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202221.988:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202226.074:INFO:CONSOLE:20] "1단계: flicking-viewport 존재: true", source:  (20)
-[15764:19576:1119/202226.074:INFO:CONSOLE:25] "2단계: li.ds9RptR1 개수: 35", source:  (25)
-[15764:19576:1119/202226.074:INFO:CONSOLE:35] "3단계: 링크 0의 aria-labelledby: view_type_guide_38127047733", source:  (35)
-[15764:19576:1119/202226.074:INFO:CONSOLE:40] "4단계: 추출한 NV MID: 38127047733, 찾을 NV MID: 87639059313", source:  (40)
-[15764:19576:1119/202226.074:INFO:CONSOLE:35] "3단계: 링크 1의 aria-labelledby: view_type_guide_54859518583", source:  (35)
-[15764:19576:1119/202226.074:INFO:CONSOLE:40] "4단계: 추출한 NV MID: 54859518583, 찾을 NV MID: 87639059313", source:  (40)
-[15764:19576:1119/202226.074:INFO:CONSOLE:35] "3단계: 링크 2의 aria-labelledby: view_type_guide_43051256166", source:  (35)
-[15764:19576:1119/202226.074:INFO:CONSOLE:40] "4단계: 추출한 NV MID: 43051256166, 찾을 NV MID: 87639059313", source:  (40)
-[15764:19576:1119/202226.074:INFO:CONSOLE:35] "3단계: 링크 3의 aria-labelledby: view_type_guide_87639059313", source:  (35)
-[15764:19576:1119/202226.074:INFO:CONSOLE:40] "4단계: 추출한 NV MID: 87639059313, 찾을 NV MID: 87639059313", source:  (40)
-[15764:19576:1119/202226.074:INFO:CONSOLE:46] "✓ NV MID 일치하는 요소 찾음! 인덱스: 3, NV MID: 87639059313", source:  (46)
-[15764:19576:1119/202226.074:INFO:CONSOLE:112] "총 링크 개수: 35", source:  (112)
-[15764:19576:1119/202226.074:INFO:CONSOLE:113] "찾을 NV MID: 87639059313", source:  (113)
-[15764:19576:1119/202226.074:INFO:CONSOLE:114] "찾은 요소: 있음", source:  (114)
-[15764:19576:1119/202226.074:INFO:CONSOLE:126] "디버깅 정보: {"totalLinks":35,"targetNvmid":"87639059313","foundNvmids":["38127047733","54859518583","43051256166","87639059313"],"found":true,"matchedNvmid":"87639059313","hasFlickingViewport":true,"hasListItems":35}", source:  (126)
-[15764:19576:1119/202226.074:INFO:CONSOLE:137] "Element not visible, scrolling to view...", source:  (137)
-[15764:19576:1119/202226.586:INFO:CONSOLE:157] "Clicking product with NV MID: 87639059313", source:  (157)
-[15764:19576:1119/202227.585:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202228.135:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202228.135:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202228.135:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202228.135:INFO:CONSOLE:39] "✓ Stealth mode activated", source:  (39)
-[15764:19576:1119/202228.591:INFO:CONSOLE:1] "api error occurred [object Object]", source: https://static-resource-smartstore.pstatic.net/smartstore/p/static/20251119142954/js/main.d88df06d.js (1)
-[20280:16220:1119/202228.896:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
-[4424:4064:1119/202233.691:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
-[4424:4064:1119/202233.691:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
+[4056:15748:1120/133929.345:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:206] No machine level policy manager exists.
+[14288:17032:1120/133929.502:VERBOSE1:components\viz\service\main\viz_main_impl.cc:86] VizNullHypothesis is disabled (not a warning)
+[456:14064:1120/133929.512:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
+[2332:19976:1120/133929.519:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
+[20640:13676:1120/133929.838:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
+[18596:14272:1120/133929.882:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
+[20640:22520:1120/133931.380:ERROR:media\base\status.h:517] DecoderStatus::0
+[4056:18232:1120/133934.132:ERROR:google_apis\gcm\engine\registration_request.cc:292] Registration response error message: DEPRECATED_ENDPOINT
+[4056:15748:1120/133954.174:INFO:CONSOLE:20] "1단계: flicking-viewport 존재: true", source:  (20)
+[4056:15748:1120/133954.174:INFO:CONSOLE:25] "2단계: li.ds9RptR1 개수: 7", source:  (25)
+[4056:15748:1120/133954.174:INFO:CONSOLE:35] "3단계: 링크 0의 aria-labelledby: view_type_guide_88368501088", source:  (35)
+[4056:15748:1120/133954.174:INFO:CONSOLE:40] "4단계: 추출한 NV MID: 88368501088, 찾을 NV MID: 87639059313", source:  (40)
+[4056:15748:1120/133954.174:INFO:CONSOLE:35] "3단계: 링크 1의 aria-labelledby: view_type_guide_87639059313", source:  (35)
+[4056:15748:1120/133954.174:INFO:CONSOLE:40] "4단계: 추출한 NV MID: 87639059313, 찾을 NV MID: 87639059313", source:  (40)
+[4056:15748:1120/133954.174:INFO:CONSOLE:46] "✓ NV MID 일치하는 요소 찾음! 인덱스: 1, NV MID: 87639059313", source:  (46)
+[4056:15748:1120/133954.174:INFO:CONSOLE:112] "총 링크 개수: 7", source:  (112)
+[4056:15748:1120/133954.174:INFO:CONSOLE:113] "찾을 NV MID: 87639059313", source:  (113)
+[4056:15748:1120/133954.174:INFO:CONSOLE:114] "찾은 요소: 있음", source:  (114)
+[4056:15748:1120/133954.174:INFO:CONSOLE:126] "디버깅 정보: {"totalLinks":7,"targetNvmid":"87639059313","foundNvmids":["88368501088","87639059313"],"found":true,"matchedNvmid":"87639059313","hasFlickingViewport":true,"hasListItems":7}", source:  (126)
+[4056:15748:1120/133954.174:INFO:CONSOLE:137] "Element not visible, scrolling to view...", source:  (137)
+[4056:15748:1120/133954.675:INFO:CONSOLE:157] "Navigating to product with NV MID: 87639059313", source:  (157)
+[4056:15748:1120/133954.675:INFO:CONSOLE:179] "Found href: https://cr3.shopping.naver.com/v2/bridge/searchGate?nv_mid=87639059313&cat_id=50015740&query=%ED%8E%AB%ED%86%A0%EB%B2%A4%20%EA%B3%A0%EC%96%91%EC%9D%B4&t=mi6xztz2&h=404eee2125421d2695b1cba574426ccd811e657a&frm=MOSCPRO", source:  (179)
+[4056:15748:1120/133954.675:INFO:CONSOLE:192] "Navigating to: https://cr3.shopping.naver.com/v2/bridge/searchGate?nv_mid=87639059313&cat_id=50015740&query=%ED%8E%AB%ED%86%A0%EB%B2%A4%20%EA%B3%A0%EC%96%91%EC%9D%B4&t=mi6xztz2&h=404eee2125421d2695b1cba574426ccd811e657a&frm=MOSCPRO", source:  (192)
+[4056:15748:1120/133956.573:INFO:CONSOLE:1] "api error occurred [object Object]", source: https://static-resource-smartstore.pstatic.net/smartstore/p/static/20251119142954/js/main.d88df06d.js (1)
+[20724:10692:1120/133959.057:INFO:third_party\webrtc\rtc_base\cpu_info.cc:75] Available number of cores: 12
+[4056:18232:1120/133959.922:ERROR:google_apis\gcm\engine\registration_request.cc:292] Registration response error message: QUOTA_EXCEEDED

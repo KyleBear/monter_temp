@@ -22,6 +22,8 @@ from selenium import webdriver
 from test5 import create_click_result_script
 from test6 import DataConnectionManager
 from adb_manager import get_adb_manager
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,7 +31,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ip 변경으로 + 브라우저
+# ip 변경으로 + 브라우저 + 변경 확인
 def change_ip(disable_duration=3):
     """
     IP 변경을 위해 데이터 연결을 끄고 켜기
@@ -497,32 +499,90 @@ def main():
         return
     
     # 각 행마다 테스트 실행 (test8의 구조처럼)
-    try:
-        for idx, row in df.iterrows():
-            iteration_id = idx + 1
+    # try:
+    #     for idx, row in df.iterrows():
+    #         iteration_id = idx + 1
             
-            logger.info("=" * 50)
-            logger.info(f"[반복 {iteration_id}/{len(df)}] 시작")
-            logger.info("=" * 50)
+    #         logger.info("=" * 50)
+    #         logger.info(f"[반복 {iteration_id}/{len(df)}] 시작")
+    #         logger.info("=" * 50)
             
-            success = test_single_iteration(row, iteration_id, headless=False)
-            if success:
-                logger.info(f"[반복 {iteration_id}] ✓ 성공")
-            else:
-                logger.warning(f"[반복 {iteration_id}] ✗ 실패")
+    #         success = test_single_iteration(row, iteration_id, headless=False)
+    #         if success:
+    #             logger.info(f"[반복 {iteration_id}] ✓ 성공")
+    #         else:
+    #             logger.warning(f"[반복 {iteration_id}] ✗ 실패")
             
-            # 다음 반복 전 대기
-            if idx < len(df) - 1:  # 마지막 반복이 아니면
-                logger.info(f"[반복 {iteration_id}] 다음 반복 전 2초 대기...")
-                time.sleep(2)
+    #         # 다음 반복 전 대기
+    #         if idx < len(df) - 1:  # 마지막 반복이 아니면
+    #             logger.info(f"[반복 {iteration_id}] 다음 반복 전 2초 대기...")
+    #             time.sleep(2)
         
+    #     logger.info("=" * 50)
+    #     logger.info("모든 크롤링 완료")
+    #     logger.info("=" * 50)
+        
+    # except Exception as e:
+    #     logger.error(f"크롤링 중 오류: {e}", exc_info=True)
+
+    # 병렬 크롤링 실행 (0.5초 딜레이로 여러 Chrome 인스턴스 동시 생성)
+    max_workers = 5  # 동시 실행할 최대 작업 수 (필요에 따라 조정)
+    
+    try:
+        results = []
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = []
+            
+            # 모든 작업을 스레드 풀에 제출 (0.5초 딜레이로)
+            for idx, row in df.iterrows():
+                iteration_id = idx + 1
+                
+                # 0.5초 딜레이를 주면서 작업 제출
+                if idx > 0:
+                    time.sleep(0.5)
+                
+                logger.info(f"[작업 제출] 반복 {iteration_id}/{len(df)} 작업 제출 중...")
+                future = executor.submit(test_single_iteration, row, iteration_id, False)
+                futures.append((future, iteration_id))
+            
+            logger.info(f"[병렬 실행] 총 {len(futures)}개 작업이 {max_workers}개 스레드로 병렬 실행됩니다")
+            
+            # 완료된 작업 결과 수집
+            for future, iteration_id in futures:
+                try:
+                    success = future.result(timeout=300)  # 최대 5분 타임아웃
+                    results.append({
+                        'success': success,
+                        'iteration_id': iteration_id
+                    })
+                    
+                    if success:
+                        logger.info(f"✓ [반복 {iteration_id}] 성공")
+                    else:
+                        logger.warning(f"✗ [반복 {iteration_id}] 실패")
+                except Exception as e:
+                    logger.error(f"✗ [반복 {iteration_id}] 작업 실행 중 오류: {e}", exc_info=True)
+                    results.append({
+                        'success': False,
+                        'iteration_id': iteration_id,
+                        'error': str(e)
+                    })
+        
+        # 결과 요약
+        success_count = sum(1 for r in results if r.get('success'))
         logger.info("=" * 50)
-        logger.info("모든 크롤링 완료")
+        logger.info(f"모든 크롤링 완료: {success_count}/{len(results)} 성공")
         logger.info("=" * 50)
+        
+        # 실패한 항목 출력
+        failed = [r for r in results if not r.get('success')]
+        if failed:
+            logger.warning(f"\n실패한 항목 ({len(failed)}개):")
+            for r in failed:
+                logger.warning(f"  - 반복 {r['iteration_id']}: {r.get('error', '알 수 없는 오류')}")
         
     except Exception as e:
         logger.error(f"크롤링 중 오류: {e}", exc_info=True)
-
 
 if __name__ == '__main__':
     main()

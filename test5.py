@@ -1019,6 +1019,7 @@ def create_click_result_script(config_nvmid):
             console.log('Clicking product with NV MID: ' + foundNvmid);
             
             // 여러 방법으로 클릭 시도
+            // mobile 로 무조건 href 로 이동하도록 해야됨.
             try {{
                 targetResult.click();
             }} catch (e) {{
