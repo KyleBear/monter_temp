@@ -236,15 +236,28 @@ def check_chromedriver():
         file_size = os.path.getsize(driver_path)
         
         # 읽기 권한
-        if os.access(driver_path, os.R_OK):
-        else:
+# 238-241줄 수정
+        # 읽기 권한
+        if not os.access(driver_path, os.R_OK):
+            print(f"[FAIL] ChromeDriver 파일에 읽기 권한이 없습니다: {driver_path}")
             return False
+        print(f"[OK] ChromeDriver 파일 읽기 권한 확인")
         
         # 실행 권한 (Windows에서는 항상 True)
-        if system == 'Windows':
+        if system != 'Windows':
+            if not os.access(driver_path, os.X_OK):
+                print(f"[FAIL] ChromeDriver 파일에 실행 권한이 없습니다: {driver_path}")
+                return False
+            print(f"[OK] ChromeDriver 파일 실행 권한 확인")
         else:
-            if os.access(driver_path, os.X_OK):
-            else:
+            print(f"[OK] Windows 환경 - 실행 권한 확인 불필요")
+        
+        # # 실행 권한 (Windows에서는 항상 True)
+        # if system == 'Windows':
+            
+        # else:
+        #     if os.access(driver_path, os.X_OK):
+        #     else:
         
         # 파일 권한 상세 정보 (Unix 계열)
         if system != 'Windows':
@@ -276,7 +289,7 @@ def check_chromedriver():
                 return True
             else:
                 if result.stderr:
-                return False
+                    return False
         except Exception as e:
             return False
         

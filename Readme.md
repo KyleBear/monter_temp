@@ -97,3 +97,5 @@ SSH 터널(SOCKS Proxy)을 통한 로컬 크롤러
 """
 
 화이트리스트
+
+https://searchadvisor.naver.com/guide/seo-basic-redirect?utm_source=chatgpt.com

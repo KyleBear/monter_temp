@@ -220,8 +220,8 @@ def clear_android_chrome_session(port=9222, adb=None):
                                 time.sleep(1)
                         except Exception as e:
                             logger.debug(f"[Android Chrome 세션 정리] 포트 {port}의 ADB 포워딩 제거 시도 {attempt + 1}/3 실패: {e}")
-                            if attempt < 2:
-                                time.sleep(1)
+                        if attempt < 2:
+                            time.sleep(1)
         except Exception as e:
             logger.warning(f"[Android Chrome 세션 정리] ADB 포워딩 제거 중 오류: {e}")
         

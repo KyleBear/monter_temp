@@ -8,6 +8,8 @@ import pandas as pd
 import os
 import subprocess
 import platform
+import shutil
+import tempfile
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -94,8 +96,22 @@ class NaverCrawler:
         options = Options()
         
         # 기본 옵션
-        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
         
+        # 자동화 탐지 제거 옵션 
+        # === [자동화 흔적 제거 필수 옵션] ===
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+        
+        # Chrome 로그 오류 억제 (GCM 등록 오류 등)
+        options.add_argument("--disable-logging")
+        options.add_argument("--log-level=3")  # INFO 레벨 이상만 표시 (ERROR, FATAL 숨김)
+        options.add_argument("--disable-gcm")  # GCM 서비스 비활성화 (QUOTA_EXCEEDED 오류 방지)
+        
+        # Client Hints + 브라우저 fingerprint 패턴까지 체크도 추가 
+        # navigator webdriver checke 확인.
+
         # Headless 모드 (선택사항)
         if headless:
             options.add_argument('--headless=new')
@@ -106,8 +122,9 @@ class NaverCrawler:
         user_data_dir = None
         if self.instance_id:
             # 절대 경로로 변환하여 잠금 문제 방지
-            user_data_dir = os.path.abspath(f"chrome_data_{self.instance_id}")
-            options.add_argument(f'--user-data-dir={user_data_dir}')
+            # 크롬 캐시 파일 저장
+            # user_data_dir = os.path.abspath(f"chrome_data_{self.instance_id}")
+            # options.add_argument(f'--user-data-dir={user_data_dir}')
             
             # 이전 세션 잠금 파일 정리 시도
             self._cleanup_user_data_lock(user_data_dir)
@@ -176,6 +193,86 @@ class NaverCrawler:
         
         logger.info(f"[_setup_driver] 드라이버 생성 완료 (인스턴스 ID: {self.instance_id})")
     
+    def enable_mobile_mode(self):
+        """모바일 모드로 전환 (F12 Toggle Device Toolbar와 동일) - Selenium CDP 사용"""
+        try:
+            logger.info("모바일 모드로 전환 중...")
+            # 1,2,3 크롬 토글 Device Toolbar 와 동일.
+            # 1. User-Agent를 모바일로 변경
+            mobile_user_agent = "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.175 Mobile Safari/537.36"
+            self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+                'userAgent': mobile_user_agent,
+                'acceptLanguage': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                'platform': 'Linux armv8l'
+            })
+            logger.info("✓ User-Agent를 모바일로 변경 완료")
+            
+            # 2. 뷰포트를 모바일로 설정
+            self.driver.execute_cdp_cmd('Emulation.setDeviceMetricsOverride', {
+                'width': 375,
+                'height': 667,
+                'deviceScaleFactor': 2.0,
+                'mobile': True,
+                'screenOrientation': {'angle': 0, 'type': 'portraitPrimary'}  # ← 추가
+            })
+            logger.info("✓ 뷰포트를 모바일로 설정 완료 (375x667)")
+            
+            # 3. 터치 이벤트 활성화
+            self.driver.execute_cdp_cmd('Emulation.setTouchEmulationEnabled', {
+                'enabled': True,
+                'maxTouchPoints': 5
+            })
+            logger.info("✓ 터치 이벤트 활성화 완료")
+            
+            # 4. ⭐ 중요: Emulation.setEmulatedMedia 설정
+            self.driver.execute_cdp_cmd('Emulation.setEmulatedMedia', {
+                'media': 'screen',
+                'features': [
+                    {'name': 'prefers-color-scheme', 'value': 'light'},
+                    {'name': 'prefers-reduced-motion', 'value': 'no-preference'}
+                ]
+            })
+            logger.info("✓ Media 설정 완료")
+            
+            # 5. ⭐ Client Hints 설정 (최신 Chrome에서 중요!)
+            self.driver.execute_cdp_cmd('Emulation.setUserAgentOverride', {
+                'userAgent': mobile_user_agent,
+                'acceptLanguage': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                'platform': 'Linux armv8l',
+                'userAgentMetadata': {  # ← 이게 핵심!
+                    'brands': [
+                        {'brand': 'Chromium', 'version': '142'},
+                        {'brand': 'Google Chrome', 'version': '142'},
+                        {'brand': 'Not_A Brand', 'version': '99'}
+                    ],
+                    'fullVersionList': [
+                        {'brand': 'Chromium', 'version': '142.0.7444.175'},
+                        {'brand': 'Google Chrome', 'version': '142.0.7444.175'},
+                        {'brand': 'Not_A Brand', 'version': '99.0.0.0'}
+                    ],
+                    'fullVersion': '142.0.7444.175',
+                    'platform': 'Android',
+                    'platformVersion': '10.0.0',
+                    'architecture': 'arm',
+                    'model': 'SM-G973F',
+                    'mobile': True,
+                    'bitness': '64'
+                }
+            })
+            logger.info("✓ Client Hints 설정 완료")
+            
+            # 6. ⭐ Pointer 타입 설정
+            self.driver.execute_cdp_cmd('Emulation.setEmitTouchEventsForMouse', {
+                'enabled': True,
+                'configuration': 'mobile'
+            })
+            logger.info("✓ Touch 마우스 이벤트 변환 완료")
+            
+            return True
+        except Exception as e:
+            logger.error(f"모바일 모드 전환 실패: {e}", exc_info=True)
+            return False
+
     def clear_search(self):
         """검색어 삭제 버튼 클릭"""
         logger.info("검색어 삭제 중...")
@@ -234,9 +331,6 @@ class NaverCrawler:
             
             # user_data_dir를 사용하는 Chrome 프로세스 찾기
             if user_data_dir:
-                # user_data_dir를 사용하는 프로세스는 직접 종료하기 어려우므로
-                # 모든 Chrome 프로세스를 종료하는 것은 위험할 수 있음
-                # 대신 잠금 파일만 정리
                 return
             
             # Chrome 프로세스 확인 (디버깅용)
@@ -280,26 +374,6 @@ class NaverCrawler:
         """네이버 접속"""
         logger.info("네이버 접속 중...")
         self.driver.get("https://m.naver.com")
-        # self.human_delay(2, 4)
-    
-    # def search_keyword(self, keyword):
-    #     """키워드 검색"""
-    #     logger.info(f"키워드 검색: {keyword}")
-    #     try:
-    #         search_input = WebDriverWait(self.driver, 10).until(
-    #             EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='search'], input.search_input"))
-    #         )
-    #         self.human_type(search_input, keyword)
-            
-    #         try:
-    #             search_btn = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit'], .btn_search")
-    #             search_btn.click()
-    #         except:
-    #             search_input.send_keys(Keys.RETURN)
-            
-    #         # self.human_delay(2, 4)
-    #     except Exception as e:
-    #         logger.error(f"검색 실패: {e}")
 
     def search_keyword(self, keyword):
         """키워드 검색 (crawler_galaxy2.py 방식 - JavaScript 기반)"""
@@ -361,7 +435,6 @@ class NaverCrawler:
             if button_result:
                 logger.info("✓ 검색 버튼 클릭 완료")
             else:
-                logger.warning("⚠ 검색 버튼을 찾지 못했습니다. Enter 키 시도...")
                 # Enter 키 이벤트 시도
                 enter_key_script = """
                 (function() {
@@ -388,94 +461,6 @@ class NaverCrawler:
             logger.error(f"검색 실패: {e}", exc_info=True)
             raise
 
-    # def search_keyword(self, keyword):
-    #     """키워드 검색"""
-    #     logger.info(f"키워드 검색: {keyword}")
-    #     try:
-    #         # 여러 선택자로 검색창 찾기
-    #         search_selectors = [
-    #             "#query",  # 실제 검색창 ID (최우선)
-    #             "input.sch_input",  # 네이버 모바일 검색창 클래스
-    #             "input[type='search']",
-    #             "input[type='search'][name='query']",
-    #             "input[placeholder*='검색']",
-    #             ".search_input"
-    #         ]
-            
-    #         search_input = None
-    #         for idx, selector in enumerate(search_selectors):
-    #             try:
-    #                 wait_time = 10 if idx == 0 else 3
-    #                 # visibility_of_element_located로 먼저 찾기 (보이는지 확인)
-    #                 search_input = WebDriverWait(self.driver, wait_time).until(
-    #                     EC.visibility_of_element_located((By.CSS_SELECTOR, selector))
-    #                 )
-    #                 # 클릭 가능할 때까지 추가 대기
-    #                 WebDriverWait(self.driver, 3).until(
-    #                     EC.element_to_be_clickable((By.CSS_SELECTOR, selector))
-    #                 )
-    #                 logger.debug(f"검색창 찾기 성공: {selector}")
-    #                 break
-    #             except:
-    #                 continue
-            
-    #         # XPath로 시도
-    #         if not search_input:
-    #             try:
-    #                 search_input = WebDriverWait(self.driver, 10).until(
-    #                     EC.visibility_of_element_located((By.XPATH, "//input[contains(@placeholder, '검색') or @type='search']"))
-    #                 )
-    #                 WebDriverWait(self.driver, 3).until(
-    #                     EC.element_to_be_clickable((By.XPATH, "//input[contains(@placeholder, '검색') or @type='search']"))
-    #                 )
-    #             except:
-    #                 raise Exception("검색창을 찾을 수 없습니다")
-            
-    #         # 요소가 보이도록 스크롤
-    #         self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", search_input)
-    #         time.sleep(0.5)
-            
-    #         # JavaScript로 직접 입력 시도 (더 안정적)
-    #         try:
-    #             # 기존 값 지우기
-    #             self.driver.execute_script("arguments[0].value = '';", search_input)
-    #             # 새 키워드 입력
-    #             self.driver.execute_script("arguments[0].value = arguments[1];", search_input, keyword)
-    #             # input 이벤트 발생
-    #             self.driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", search_input)
-    #             time.sleep(0.5)
-    #             logger.info("✓ JavaScript로 검색어 입력 완료")
-    #         except:
-    #             # JavaScript 실패 시 일반 방법 시도
-    #             logger.warning("JavaScript 입력 실패, 일반 방법 시도...")
-    #             search_input.clear()
-    #             self.human_type(search_input, keyword)
-            
-    #         # 검색 실행
-    #         try:
-    #             # 엔터 키 이벤트
-    #             self.driver.execute_script("arguments[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter' }));", search_input)
-    #             time.sleep(0.5)
-                
-    #             # 검색 버튼 클릭 시도
-    #             try:
-    #                 search_btn = WebDriverWait(self.driver, 2).until(
-    #                     EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit'], .btn_search"))
-    #                 )
-    #                 search_btn.click()
-    #             except:
-    #                 # 버튼이 없으면 엔터 키만으로 검색
-    #                 search_input.send_keys(Keys.RETURN)
-    #         except:
-    #             # 모든 방법 실패 시 엔터 키만 시도
-    #             search_input.send_keys(Keys.RETURN)
-            
-    #         self.human_delay(2, 4)
-            
-    #     except Exception as e:
-    #         logger.error(f"검색 실패: {e}", exc_info=True)
-    #         raise
-
     # 함수 정의 (410번째 줄 전에 추가)
     def search_base_keyword(self, base_keyword):
         """
@@ -490,23 +475,6 @@ class NaverCrawler:
         """
         try:
             logger.info(f"새 기본 검색어 입력: {base_keyword}")
-            
-            # clear_and_search_script = f"""
-            # (function() {{
-            #     var searchInput = document.querySelector('#query') || 
-            #                     document.querySelector('input.sch_input') ||
-            #                     document.querySelector('input[type="search"]');
-            #     if (searchInput) {{
-            #         searchInput.focus();
-            #         searchInput.click();
-            #         searchInput.value = '';              
-            #         searchInput.value = '{base_keyword}';
-            #         searchInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-            #         return true;
-            #     }}
-            #     return false;
-            # }})();
-            # """
 
             clear_and_search_script = f"""
             (function() {{
@@ -624,7 +592,6 @@ class NaverCrawler:
                 return false;
             })();
             """
-
             
             result = self.driver.execute_script(click_info_script)
             return result
@@ -648,6 +615,562 @@ class NaverCrawler:
             except:
                 pass
 
+    # NaverCrawler 클래스에 메서드 추가
+    def click_by_nvmid_mobile(self, nvmid):
+        """nvmid로 상품 클릭 (모바일 터치 이벤트 사용)"""
+        logger.info(f"[모바일 클릭] NV MID: {nvmid}")
+        
+        # 클릭 전 URL 저장
+        try:
+            url_before_click = self.driver.current_url
+            logger.info(f"[모바일 클릭 전] 현재 URL: {url_before_click}")
+        except Exception as e:
+            logger.warning(f"클릭 전 URL 확인 실패: {e}")
+            url_before_click = None
+        
+        # 페이지 로드 대기
+        try:
+            logger.info(f"[모바일 클릭] 페이지 로드 대기 중...")
+            WebDriverWait(self.driver, 10).until(
+                lambda d: d.execute_script("return document.readyState") == "complete"
+            )
+            logger.info(f"[모바일 클릭] 페이지 로드 완료")
+        except Exception as e:
+            logger.warning(f"[모바일 클릭] 페이지 로드 대기 실패: {e}")
+        
+        # 추가 대기 (동적 콘텐츠 로드를 위해)
+        time.sleep(2)
+        
+        # 모바일 스크립트 실행하여 좌표 가져오기
+        try:
+            click_script = create_click_result_script_mobile(nvmid)
+            logger.info(f"[모바일 클릭] 스크립트 실행 시작...")
+            
+            # 페이지가 로드되었는지 확인
+            try:
+                ready_state = self.driver.execute_script("return document.readyState;")
+                logger.info(f"[모바일 클릭] 문서 상태: {ready_state}")
+            except Exception as e:
+                logger.warning(f"[모바일 클릭] 문서 상태 확인 실패: {e}")
+            
+            # 요소가 존재하는지 먼저 확인
+            try:
+                element_count = self.driver.execute_script(
+                    "return document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^=\"view_type_guide_\"]').length;"
+                )
+                logger.info(f"[모바일 클릭] 찾은 요소 개수: {element_count}")
+            except Exception as e:
+                logger.warning(f"[모바일 클릭] 요소 개수 확인 실패: {e}")
+            
+            logger.info(f"[모바일 클릭] 스크립트 실행 중...")
+            
+            # 스크립트 실행 전 간단한 테스트
+            try:
+                test_result = self.driver.execute_script("return 'test';")
+                logger.info(f"[모바일 클릭] JavaScript 실행 테스트: {test_result}")
+            except Exception as e:
+                logger.error(f"[모바일 클릭] JavaScript 실행 테스트 실패: {e}")
+            
+            # 스크립트를 단계별로 테스트
+            try:
+                # 1단계: 요소 찾기 테스트
+                find_test = self.driver.execute_script("""
+                    var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+                    return {
+                        count: listItems.length,
+                        firstAria: listItems.length > 0 ? listItems[0].getAttribute('aria-labelledby') : null
+                    };
+                """)
+                logger.info(f"[모바일 클릭] 요소 찾기 테스트: {find_test}")
+            except Exception as e:
+                logger.error(f"[모바일 클릭] 요소 찾기 테스트 실패: {e}")
+            
+            # 실제 스크립트 실행 (타임아웃 설정)
+            try:
+                logger.info(f"[모바일 클릭] 전체 스크립트 실행 시작...")
+                logger.debug(f"[모바일 클릭] 스크립트 길이: {len(click_script)} 문자")
+                
+                # 스크립트를 직접 실행해서 반환값 확인
+                result = self.driver.execute_script(click_script)
+                
+                # 결과가 None인 경우 스크립트를 단계별로 실행
+                if result is None:
+                    logger.warning(f"[모바일 클릭] 스크립트가 None 반환, 단계별 실행 시도...")
+                    # 단계 1: 요소 찾기
+                    step1 = self.driver.execute_script(f"""
+                        var targetNvmid = '{nvmid}';
+                        var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+                        var aTag = null;
+                        for (var i = 0; i < listItems.length; i++) {{
+                            var el = listItems[i];
+                            var aria = el.getAttribute('aria-labelledby');
+                            if (!aria) continue;
+                            var nvmid = aria.replace('view_type_guide_', '');
+                            if (nvmid === targetNvmid) {{
+                                aTag = el;
+                                break;
+                            }}
+                        }}
+                        return aTag ? {{found: true, nvmid: targetNvmid}} : {{found: false, nvmid: targetNvmid}};
+                    """)
+                    logger.info(f"[모바일 클릭] 단계 1 (요소 찾기) 결과: {step1}")
+                    
+                    if step1 and step1.get('found'):
+                        # 단계 2: 좌표 구하기
+                        step2 = self.driver.execute_script(f"""
+                            var targetNvmid = '{nvmid}';
+                            var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+                            var aTag = null;
+                            var foundNvmid = null;
+                            for (var i = 0; i < listItems.length; i++) {{
+                                var el = listItems[i];
+                                var aria = el.getAttribute('aria-labelledby');
+                                if (!aria) continue;
+                                var nvmid = aria.replace('view_type_guide_', '');
+                                if (nvmid === targetNvmid) {{
+                                    aTag = el;
+                                    foundNvmid = nvmid;
+                                    break;
+                                }}
+                            }}
+                            if (!aTag) return {{success: false, reason: 'not_found'}};
+                            
+                            // 요소가 보이지 않으면 스크롤
+                            var rect = aTag.getBoundingClientRect();
+                            var isVisible = rect.width > 0 && rect.height > 0 && 
+                                           rect.top >= 0 && rect.left >= 0 &&
+                                           rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                                           rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+                            
+                            if (!isVisible) {{
+                                aTag.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                                var scrollWait = 500;
+                                var scrollWaitUntil = Date.now() + scrollWait;
+                                while (Date.now() < scrollWaitUntil) {{
+                                    // busy wait
+                                }}
+                                rect = aTag.getBoundingClientRect();
+                            }}
+                            
+                            return {{
+                                success: true,
+                                nvmid: foundNvmid,
+                                coordinates: {{
+                                    x: Math.round(rect.left + rect.width / 2),
+                                    y: Math.round(rect.top + rect.height / 2),
+                                    width: Math.round(rect.width),
+                                    height: Math.round(rect.height)
+                                }}
+                            }};
+                        """)
+                        logger.info(f"[모바일 클릭] 단계 2 (좌표 구하기) 결과: {step2}")
+                        result = step2
+                
+                logger.info(f"[모바일 클릭] 스크립트 실행 완료")
+            except Exception as e:
+                logger.error(f"[모바일 클릭] 스크립트 실행 중 예외 발생: {e}", exc_info=True)
+                result = None
+            
+            # 디버깅: result 전체 출력
+            logger.info(f"[모바일 클릭] 스크립트 실행 결과: {result}")
+            logger.info(f"[모바일 클릭] 결과 타입: {type(result)}")
+            
+            # None인 경우 추가 디버깅
+            if result is None:
+                logger.error(f"[모바일 클릭] ⚠️ 스크립트가 None을 반환했습니다!")
+                
+                # 스크립트를 직접 실행해서 오류 확인
+                try:
+                    logger.info(f"[모바일 클릭] 스크립트 직접 실행 테스트...")
+                    test_script = f"""
+                    (function() {{
+                        var targetNvmid = '{nvmid}';
+                        var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+                        return {{
+                            targetNvmid: targetNvmid,
+                            foundCount: listItems.length,
+                            test: 'success'
+                        }};
+                    }})();
+                    """
+                    test_result = self.driver.execute_script(test_script)
+                    logger.info(f"[모바일 클릭] 간단한 테스트 스크립트 결과: {test_result}")
+                except Exception as e:
+                    logger.error(f"[모바일 클릭] 간단한 테스트 스크립트 실패: {e}")
+                
+                # 브라우저 콘솔 오류 확인
+                try:
+                    console_logs = self.driver.get_log('browser')
+                    if console_logs:
+                        logger.error(f"[모바일 클릭] 브라우저 콘솔 오류 (최근 10개):")
+                        for log in console_logs[-10:]:
+                            if log.get('level') in ['SEVERE', 'ERROR']:
+                                logger.error(f"  - [{log.get('level')}] {log.get('message')}")
+                except Exception as e:
+                    logger.warning(f"[모바일 클릭] 브라우저 로그 확인 실패: {e}")
+            
+        except Exception as e:
+            logger.error(f"[모바일 클릭] 스크립트 실행 중 오류 발생: {e}", exc_info=True)
+            result = None
+        
+        if result and isinstance(result, dict):
+            # 디버깅 정보 출력
+            if 'debug' in result:
+                debug_info = result.get('debug', {})
+                logger.info(f"[모바일 클릭] 디버깅 정보:")
+                logger.info(f"  - 요소가 화면에 보였는지: {debug_info.get('wasVisible', 'N/A')}")
+                if 'rectBeforeScroll' in debug_info:
+                    rect_info = debug_info.get('rectBeforeScroll', {})
+                    logger.info(f"  - 스크롤 전 좌표: left={rect_info.get('left')}, top={rect_info.get('top')}, width={rect_info.get('width')}, height={rect_info.get('height')}")
+            
+            if result.get('success'):
+                coordinates = result.get('coordinates')
+                if coordinates:
+                    x = coordinates.get('x')
+                    y = coordinates.get('y')
+                    width = coordinates.get('width')
+                    height = coordinates.get('height')
+                    logger.info(f"[모바일 클릭] 좌표 가져오기 성공: x={x}, y={y}, width={width}, height={height}")
+                    
+                    # CDP로 터치 이벤트 발생 (모바일 클릭)
+                    try:
+                        # 스크롤 방지 및 요소로 스크롤
+                        logger.info(f"[모바일 클릭] 요소로 스크롤 및 스크롤 방지...")
+                        self.driver.execute_script(f"""
+                            var targetNvmid = '{nvmid}';
+                            var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+                            var aTag = null;
+                            for (var i = 0; i < listItems.length; i++) {{
+                                var el = listItems[i];
+                                var aria = el.getAttribute('aria-labelledby');
+                                if (!aria) continue;
+                                var nvmid = aria.replace('view_type_guide_', '');
+                                if (nvmid === targetNvmid) {{
+                                    aTag = el;
+                                    break;
+                                }}
+                            }}
+                            if (aTag) {{
+                                // 스크롤 방지
+                                document.body.style.overflow = 'hidden';
+                                // 요소로 스크롤
+                                aTag.scrollIntoView({{ behavior: 'instant', block: 'center' }});
+                            }}
+                        """)
+                        time.sleep(0.5)  # 스크롤 완료 대기
+                        
+                        # 좌표 다시 가져오기 (스크롤 후)
+                        updated_result = self.driver.execute_script(f"""
+                            var targetNvmid = '{nvmid}';
+                            var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+                            var aTag = null;
+                            for (var i = 0; i < listItems.length; i++) {{
+                                var el = listItems[i];
+                                var aria = el.getAttribute('aria-labelledby');
+                                if (!aria) continue;
+                                var nvmid = aria.replace('view_type_guide_', '');
+                                if (nvmid === targetNvmid) {{
+                                    aTag = el;
+                                    break;
+                                }}
+                            }}
+                            if (!aTag) return null;
+                            var rect = aTag.getBoundingClientRect();
+                            return {{
+                                x: Math.round(rect.left + rect.width / 2),
+                                y: Math.round(rect.top + rect.height / 2)
+                            }};
+                        """)
+                        
+                        if updated_result:
+                            x = updated_result.get('x', x)
+                            y = updated_result.get('y', y)
+                            logger.info(f"[모바일 클릭] 스크롤 후 좌표 업데이트: x={x}, y={y}")
+                        
+                        # Input.dispatchTouchEvent 사용
+                        logger.info(f"[모바일 클릭] 터치 이벤트 발생 시작 (좌표: {x}, {y})...")
+                        self.driver.execute_cdp_cmd('Input.dispatchTouchEvent', {
+                            'type': 'touchStart',
+                            'touchPoints': [{
+                                'x': x,
+                                'y': y,
+                                'radiusX': 2.5,
+                                'radiusY': 2.5,
+                                'rotationAngle': 10,
+                                'force': 0.5,
+                                'id': 0
+                            }]
+                        })
+                        
+                        time.sleep(1000)  # 짧은 대기
+                        
+                        self.driver.execute_cdp_cmd('Input.dispatchTouchEvent', {
+                            'type': 'touchEnd',
+                            'touchPoints': [{
+                                'x': x,
+                                'y': y,
+                                'radiusX': 2.5,
+                                'radiusY': 2.5,
+                                'rotationAngle': 10,
+                                'force': 0.5,
+                                'id': 0
+                            }]
+                        })
+                        
+                        logger.info(f"[모바일 클릭] ✓ 터치 이벤트 발생 수행 (좌표: {x}, {y})")
+                        
+                        # 스크롤 방지 해제
+                        self.driver.execute_script("document.body.style.overflow = '';")
+                        
+                        # 네비게이션 대기
+                        time.sleep(2)
+                        
+                        # 클릭 후 URL 확인
+                        try:
+                            url_after_click = self.driver.current_url
+                            url_changed = url_before_click and url_after_click != url_before_click
+                            logger.info(f"[모바일 클릭 후] 현재 URL: {url_after_click}")
+                            logger.info(f"[모바일 클릭 확인] URL 변경 여부: {url_changed}")
+                            
+                            if url_changed:
+                                logger.info(f"✓ 모바일 클릭 성공 - 링크 변환됨!")
+                                return True
+                            else:
+                                logger.warning(f"⚠ URL이 변경되지 않았습니다")
+                                return False
+                        except Exception as e:
+                            logger.warning(f"클릭 후 URL 확인 실패: {e}")
+                            return False
+                            
+                    except Exception as e:
+                        logger.error(f"[모바일 클릭] 터치 이벤트 발생 실패: {e}", exc_info=True)
+                        return False
+                else:
+                    logger.warning(f"[모바일 클릭] 좌표 정보가 없습니다 (success=True이지만 coordinates가 없음)")
+                    return False
+            else:
+                reason = result.get('reason', 'unknown')
+                logger.warning(f"[모바일 클릭] 상품을 찾지 못했습니다: {reason}")
+                logger.warning(f"[모바일 클릭] 전체 결과: {result}")
+                return False
+        else:
+            logger.error(f"[모바일 클릭] 스크립트 실행 결과가 올바르지 않습니다: {result}")
+            return False
+
+
+def create_click_result_script_mobile(config_nvmid):
+    """
+    NV MID로 검색 결과를 찾아 모바일 터치 이벤트로 클릭하는 JavaScript 스크립트 생성
+    좌표를 가져와서 터치 이벤트로 클릭
+    test5.py의 간단한 방식을 사용
+    
+    Args:
+        config_nvmid: 찾을 NV MID 값
+    
+    Returns:
+        str: 실행할 JavaScript 코드
+    """
+    click_result_script = f"""
+    (function() {{
+        var targetNvmid = '{config_nvmid}';
+        var aTag = null;
+        var foundNvmid = null;
+
+        var maxWait = 5000;
+        var startTime = Date.now();
+
+        // ⭐ test5.py와 동일한 간단한 방법: 직접 셀렉터 사용
+        while (!aTag && (Date.now() - startTime) < maxWait) {{
+            var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+            
+            for (var i = 0; i < listItems.length; i++) {{
+                var el = listItems[i];
+                var aria = el.getAttribute('aria-labelledby');
+
+                if (!aria) continue;
+
+                var nvmid = aria.replace('view_type_guide_', '');
+                
+                if (nvmid === targetNvmid) {{
+                    aTag = el;
+                    foundNvmid = nvmid;
+                    break;
+                }}
+            }}
+
+            if (!aTag) {{
+                var waitUntil = Date.now() + 100;
+                while (Date.now() < waitUntil) {{
+                    // busy wait
+                }}
+            }}
+        }}
+
+        if (!aTag) {{
+            return {{
+                success: false,
+                reason: "nvmid_not_found",
+                nvmid: null
+            }};
+        }}
+
+        // 요소가 보이지 않으면 스크롤
+        var rect = aTag.getBoundingClientRect();
+        var isVisible = rect.width > 0 && rect.height > 0 && 
+                       rect.top >= 0 && rect.left >= 0 &&
+                       rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                       rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+        
+        if (!isVisible) {{
+            aTag.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+            var scrollWait = 500;
+            var scrollWaitUntil = Date.now() + scrollWait;
+            while (Date.now() < scrollWaitUntil) {{
+                // busy wait
+            }}
+            // 스크롤 후 좌표 다시 가져오기
+            rect = aTag.getBoundingClientRect();
+        }}
+
+        // 요소가 클릭 가능한지 확인
+        var computedStyle = window.getComputedStyle(aTag);
+        var isClickable = computedStyle.display !== 'none' && 
+                         computedStyle.visibility !== 'hidden' &&
+                         computedStyle.pointerEvents !== 'none';
+        
+        if (!isClickable) {{
+            return {{ 
+                success: false, 
+                nvmid: foundNvmid, 
+                reason: 'not_clickable'
+            }};
+        }}
+
+        // 좌표 반환 (중심점 계산)
+        var centerX = rect.left + (rect.width / 2);
+        var centerY = rect.top + (rect.height / 2);
+
+        return {{
+            success: true,
+            nvmid: foundNvmid,
+            coordinates: {{
+                x: Math.round(centerX),
+                y: Math.round(centerY),
+                width: Math.round(rect.width),
+                height: Math.round(rect.height)
+            }}
+        }};
+    }})();
+    """
+    
+    return click_result_script
+
+
+def cleanup_all_chrome_sessions():
+    """
+    모든 Chrome 세션 및 쿠키 정리
+    - 실행 중인 Chrome 프로세스 종료
+    - chrome_data_* 디렉토리 삭제
+    - 임시 디렉토리 정리
+    """
+    logger.info("=" * 50)
+    logger.info("모든 Chrome 세션 및 쿠키 정리 시작")
+    logger.info("=" * 50)
+    
+    try:
+        # 1. 실행 중인 Chrome 프로세스 종료
+        logger.info("[세션 정리] Chrome 프로세스 종료 중...")
+        if platform.system() == 'Windows':
+            try:
+                # Windows에서 Chrome 프로세스 종료
+                subprocess.run(['taskkill', '/F', '/IM', 'chrome.exe'], 
+                             capture_output=True, timeout=10)
+                subprocess.run(['taskkill', '/F', '/IM', 'chromedriver.exe'], 
+                             capture_output=True, timeout=10)
+                logger.info("✓ Chrome 프로세스 종료 완료")
+            except Exception as e:
+                logger.warning(f"Chrome 프로세스 종료 중 오류: {e}")
+        else:
+            # Linux/Mac에서 Chrome 프로세스 종료
+            try:
+                subprocess.run(['pkill', '-f', 'chrome'], 
+                             capture_output=True, timeout=10)
+                subprocess.run(['pkill', '-f', 'chromedriver'], 
+                             capture_output=True, timeout=10)
+                logger.info("✓ Chrome 프로세스 종료 완료")
+            except Exception as e:
+                logger.warning(f"Chrome 프로세스 종료 중 오류: {e}")
+        
+        # 프로세스 종료 대기
+        time.sleep(2)
+        
+        # 2. chrome_data_* 디렉토리 삭제
+        logger.info("[세션 정리] chrome_data_* 디렉토리 정리 중...")
+        current_dir = os.getcwd()
+        deleted_count = 0
+        
+        try:
+            for item in os.listdir(current_dir):
+                item_path = os.path.join(current_dir, item)
+                
+                # chrome_data_로 시작하는 디렉토리 찾기
+                if os.path.isdir(item_path) and item.startswith('chrome_data_'):
+                    try:
+                        # 잠금 파일 먼저 삭제 시도
+                        lock_files = [
+                            os.path.join(item_path, 'SingletonLock'),
+                            os.path.join(item_path, 'Default', 'LockFile')
+                        ]
+                        for lock_file in lock_files:
+                            if os.path.exists(lock_file):
+                                try:
+                                    os.remove(lock_file)
+                                except:
+                                    pass
+                        
+                        # 디렉토리 삭제
+                        shutil.rmtree(item_path, ignore_errors=True)
+                        deleted_count += 1
+                        logger.info(f"✓ 디렉토리 삭제: {item}")
+                    except Exception as e:
+                        logger.warning(f"디렉토리 삭제 실패 ({item}): {e}")
+            
+            if deleted_count > 0:
+                logger.info(f"✓ 총 {deleted_count}개 chrome_data_* 디렉토리 삭제 완료")
+            else:
+                logger.info("삭제할 chrome_data_* 디렉토리가 없습니다")
+        except Exception as e:
+            logger.warning(f"디렉토리 정리 중 오류: {e}")
+        
+        # 3. 임시 디렉토리 정리 (tempfile로 생성된 것들)
+        logger.info("[세션 정리] 임시 디렉토리 정리 중...")
+        temp_dir = tempfile.gettempdir()
+        
+        try:
+            temp_deleted = 0
+            for item in os.listdir(temp_dir):
+                item_path = os.path.join(temp_dir, item)
+                
+                # chrome_data_로 시작하는 임시 디렉토리 찾기
+                if os.path.isdir(item_path) and item.startswith('chrome_data_'):
+                    try:
+                        shutil.rmtree(item_path, ignore_errors=True)
+                        temp_deleted += 1
+                    except:
+                        pass
+            
+            if temp_deleted > 0:
+                logger.info(f"✓ 총 {temp_deleted}개 임시 디렉토리 삭제 완료")
+        except Exception as e:
+            logger.warning(f"임시 디렉토리 정리 중 오류: {e}")
+        
+        logger.info("=" * 50)
+        logger.info("✓ 모든 Chrome 세션 및 쿠키 정리 완료")
+        logger.info("=" * 50)
+        
+    except Exception as e:
+        logger.error(f"세션 정리 중 오류: {e}", exc_info=True)
+
 
 def test_single_iteration(row_data, iteration_id, headless=False):
     """
@@ -668,6 +1191,8 @@ def test_single_iteration(row_data, iteration_id, headless=False):
         logger.info(f"[반복 {iteration_id}] 크롤러 생성 시작")
         logger.info(f"[반복 {iteration_id}] ========================================")
         
+        # 🔑 모바일 모드 전환 (nv_mid 클릭 전에 추가)
+
         # 크롤러 생성
         try:
             crawler = NaverCrawler(instance_id=iteration_id, headless=headless)
@@ -675,44 +1200,43 @@ def test_single_iteration(row_data, iteration_id, headless=False):
         except Exception as e:
             logger.error(f"[반복 {iteration_id}] ✗ 크롤러 생성 실패: {e}", exc_info=True)
             return False
-        
+
+        logger.info(f"[반복 {iteration_id}] 모바일 모드로 전환 중...")
+        if crawler.enable_mobile_mode():
+            logger.info(f"[반복 {iteration_id}] ✓ 모바일 모드 전환 완료")
+            logger.info(f"[반복 {iteration_id}] ✓ 모바일 버전 페이지 로드 완료")
+        else:
+            logger.warning(f"[반복 {iteration_id}] ⚠ 모바일 모드 전환 실패, 계속 진행...")                
         # 네이버 접속
         crawler.navigate_to_naver()
-        time.sleep(3)
-        # # 랜덤 행동
-        # crawler.random_behavior()
-        
+
         # 메인 키워드 검색
         if 'main_keyword' in row_data and pd.notna(row_data['main_keyword']):
             crawler.search_keyword(row_data['main_keyword'])
             time.sleep(4)
-        # # 랜덤 행동
-        # crawler.random_behavior()
-        # crawler.clear_search()
+
         # 새 검색어로 검색
         # 그냥 네이버로 네비게이션 검색 전과 후의 id 는 계속 달라집니다. -- 바뀔 가능성이 있음. 
         crawler.navigate_to_naver()
+        if crawler.enable_mobile_mode():
+            logger.info(f"[반복 {iteration_id}] ✓ 모바일 모드 전환 완료")
+            logger.info(f"[반복 {iteration_id}] ✓ 모바일 버전 페이지 로드 완료")
+        else:
+            logger.warning(f"[반복 {iteration_id}] ⚠ 모바일 모드 전환 실패, 계속 진행...")                
+        time.sleep(3)
         if 'base_search_keyword' in row_data and pd.notna(row_data['base_search_keyword']):
             crawler.search_keyword(row_data['base_search_keyword'])
-            # crawler.search_keyword(row_data['base_search_keyword'])
-            # crawler.search_base_keyword(row_data['base_search_keyword'])
-            time.sleep(4)        
-
-
-        # # 랜덤 행동
-        # search_base_keyword 스크립트를 해야될듯.
-        # crawler.random_behavior()
-        
+            time.sleep(4)
+        # pdb.set_trace()
         # nvmid로 상품 클릭
         if 'nv_mid' in row_data and pd.notna(row_data['nv_mid']):
             crawler.click_by_nvmid(str(row_data['nv_mid']))
-            time.sleep(2)
+            # crawler.click_by_nvmid_mobile(str(row_data['nv_mid']))
+        time.sleep(3)
+
         # 구매 추가정보 버튼 클릭
         crawler.click_purchase_additional_info()
         time.sleep(4)
-        # # 페이지에서 랜덤 행동
-        # for _ in range(2):
-        #     crawler.random_behavior()
         
         logger.info(f"[반복 {iteration_id}] 크롤링 완료")
         return True
@@ -730,7 +1254,7 @@ def main():
     logger.info("=" * 50)
     logger.info("일반 셀레니움 크롤링 테스트 시작")
     logger.info("=" * 50)
-    change_ip()
+    # change_ip()
     time.sleep(4)
     # CSV 파일 경로
     csv_file = 'keyword_data.csv'
@@ -817,6 +1341,9 @@ def main():
         
     except Exception as e:
         logger.error(f"크롤링 중 오류: {e}", exc_info=True)
+    finally:
+        # ⭐ 모든 쓰레드가 끝난 후 Chrome 세션 및 쿠키 정리
+        cleanup_all_chrome_sessions()
 
 
 if __name__ == '__main__':

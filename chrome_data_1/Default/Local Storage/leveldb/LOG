@@ -1,6 +1,0 @@
-2025/11/20-13:39:28.979 4ef4 Reusing MANIFEST C:\Users\dev\Desktop\monter\chrome_data_1\Default\Local Storage\leveldb/MANIFEST-000001
-2025/11/20-13:39:28.986 4ef4 Recovering log #3
-2025/11/20-13:39:28.989 4ef4 Reusing old log C:\Users\dev\Desktop\monter\chrome_data_1\Default\Local Storage\leveldb/000003.log 
-2025/11/20-13:40:01.328 47f0 Level-0 table #5: started
-2025/11/20-13:40:01.337 47f0 Level-0 table #5: 15232 bytes OK
-2025/11/20-13:40:01.345 47f0 Delete type=0 #3

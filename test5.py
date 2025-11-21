@@ -6,6 +6,7 @@ ADB + Chrome DevTools Protocol을 사용하여 휴대폰 Chrome을 직접 제어
 1. Android 휴대폰에서 개발자 옵션 활성화 및 USB 디버깅 활성화
 2. 휴대폰이 USB로 PC에 연결되어 있어야 함
 3. Chrome DevTools Protocol을 사용하기 위해 포트 포워딩 필요
+4. CDP 사용, - 셀레니움이 아님.
 """
 import time
 import logging
@@ -203,6 +204,47 @@ class ChromeDevTools:
             logger.error(f"Chrome DevTools 연결 실패: {e}")
             return False
     
+    # test5.py의 ChromeDevTools 클래스에 추가 (약 200번 줄 근처)
+    # 토글모드 - 
+    def enable_mobile_mode(self):
+        """모바일 모드로 전환 (User-Agent 및 뷰포트 설정) - F12 Toggle Device Toolbar와 동일"""
+        try:
+            # 1. User-Agent를 모바일로 변경
+            mobile_user_agent = "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36"
+            result = self.send_command('Network.setUserAgentOverride', {
+                'userAgent': mobile_user_agent,
+                'acceptLanguage': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                'platform': 'Linux armv8l'
+            })
+            
+            if result:
+                logger.info("✓ User-Agent를 모바일로 변경 완료")
+            
+            # 2. 뷰포트를 모바일로 설정 (F12 Toggle Device Toolbar와 동일)
+            result = self.send_command('Emulation.setDeviceMetricsOverride', {
+                'width': 375,
+                'height': 667,
+                'deviceScaleFactor': 2.0,
+                'mobile': True
+            })
+            
+            if result:
+                logger.info("✓ 뷰포트를 모바일로 설정 완료 (375x667)")
+            
+            # 3. 터치 이벤트 활성화
+            result = self.send_command('Emulation.setTouchEmulationEnabled', {
+                'enabled': True,
+                'maxTouchPoints': 5
+            })
+            
+            if result:
+                logger.info("✓ 터치 이벤트 활성화 완료")
+            
+            return True
+        except Exception as e:
+            logger.error(f"모바일 모드 전환 실패: {e}", exc_info=True)
+            return False
+
     def send_command(self, method, params=None, timeout=30):
         """명령 전송"""
         if not self.ws:
@@ -492,6 +534,8 @@ class ChromeDevTools:
         except Exception as e:
             logger.error(f"뒤로가기 중 오류: {e}", exc_info=True)
             return False
+
+
 
 def get_port_process_info(port):
     """
@@ -855,7 +899,7 @@ def restart_mobile_chrome(adb, url=None, enable_data_toggle=True):
 def create_click_result_script(config_nvmid):
     """
     NV MID로 검색 결과를 찾아 클릭하는 JavaScript 스크립트 생성
-    
+    A 태그를 클릭하는 JS 생성
     Args:
         config_nvmid: 찾을 NV MID 값
     
@@ -866,7 +910,7 @@ def create_click_result_script(config_nvmid):
     (function() {{
         var targetNvmid = '{config_nvmid}';
         var targetAriaId = 'view_type_guide_' + targetNvmid;
-        var targetResult = null;
+        var aTagToClick = null;  // 클릭할 a 태그
         var foundNvmid = null;
         var allFoundNvmids = [];  // 디버깅용
         
@@ -876,48 +920,45 @@ def create_click_result_script(config_nvmid):
         var allLinks = [];
         
         // HTML 구조를 차례대로 타고 들어가면서 찾기
-        while (targetResult === null && (Date.now() - startTime) < maxWait) {{
+        while (aTagToClick === null && (Date.now() - startTime) < maxWait) {{
             // 1단계: .flicking-viewport 찾기
             var flickingViewport = document.querySelector('.flicking-viewport');
-            console.log('1단계: flicking-viewport 존재: ' + !!flickingViewport);
             
             if (flickingViewport) {{
                 // 2단계: flicking-viewport 안에서 li.ds9RptR1 찾기
                 var listItems = flickingViewport.querySelectorAll('li.ds9RptR1');
-                console.log('2단계: li.ds9RptR1 개수: ' + listItems.length);
                 
                 // 3단계: 각 li를 순회하면서 a 태그 찾기
                 for (var i = 0; i < listItems.length; i++) {{
                     var listItem = listItems[i];
-                    var link = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
+                    aTagToClick = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
                     
-                    if (link) {{
+                    if (aTagToClick) {{
                         // 4단계: aria-labelledby 속성에서 view_type_guide_ 뒤의 번호 추출
-                        var ariaId = link.getAttribute('aria-labelledby');
-                        console.log('3단계: 링크 ' + i + '의 aria-labelledby: ' + ariaId);
+                        var ariaId = aTagToClick.getAttribute('aria-labelledby');
                         
                         if (ariaId && ariaId.startsWith('view_type_guide_')) {{
                             var nvmid = ariaId.replace('view_type_guide_', '');
-                            allFoundNvmids.push(nvmid);  // 디버깅용
-                            console.log('4단계: 추출한 NV MID: ' + nvmid + ', 찾을 NV MID: ' + targetNvmid);
+                            allFoundNvmids.push(nvmid);
                             
                             // 5단계: 번호가 일치하는지 확인
                             if (nvmid === targetNvmid) {{
-                                targetResult = link;
                                 foundNvmid = nvmid;
-                                console.log('✓ NV MID 일치하는 요소 찾음! 인덱스: ' + i + ', NV MID: ' + nvmid);
                                 break;
+                            }} else {{
+                                aTagToClick = null;
                             }}
+                        }} else {{
+                            aTagToClick = null;
                         }}
                     }}
                 }}
             }}
             
             // flicking-viewport가 없거나 찾지 못한 경우, 다른 구조 시도
-            if (!targetResult) {{
+            if (!aTagToClick) {{
                 // 대안: ul > li.ds9RptR1 구조 찾기
                 var ulElements = document.querySelectorAll('ul');
-                console.log('대안: ul 요소 개수: ' + ulElements.length);
                 
                 for (var u = 0; u < ulElements.length; u++) {{
                     var ul = ulElements[u];
@@ -925,30 +966,32 @@ def create_click_result_script(config_nvmid):
                     
                     for (var i = 0; i < listItems.length; i++) {{
                         var listItem = listItems[i];
-                        var link = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
+                        aTagToClick = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
                         
-                        if (link) {{
-                            var ariaId = link.getAttribute('aria-labelledby');
+                        if (aTagToClick) {{
+                            var ariaId = aTagToClick.getAttribute('aria-labelledby');
                             if (ariaId && ariaId.startsWith('view_type_guide_')) {{
                                 var nvmid = ariaId.replace('view_type_guide_', '');
                                 allFoundNvmids.push(nvmid);
                                 
                                 if (nvmid === targetNvmid) {{
-                                    targetResult = link;
                                     foundNvmid = nvmid;
-                                    console.log('✓ NV MID 일치하는 요소 찾음! (ul 구조) 인덱스: ' + i + ', NV MID: ' + nvmid);
                                     break;
+                                }} else {{
+                                    aTagToClick = null;
                                 }}
+                            }} else {{
+                                aTagToClick = null;
                             }}
                         }}
                     }}
                     
-                    if (targetResult) break;
+                    if (aTagToClick) break;
                 }}
             }}
             
             // 여전히 찾지 못한 경우 대기
-            if (!targetResult) {{
+            if (!aTagToClick) {{
                 var wait = 100;
                 var waitUntil = Date.now() + wait;
                 while (Date.now() < waitUntil) {{
@@ -958,46 +1001,25 @@ def create_click_result_script(config_nvmid):
         }}
         
         // 디버깅 정보 수집
-        if (allLinks.length === 0) {{
-            var flickingViewport = document.querySelector('.flicking-viewport');
-            if (flickingViewport) {{
-                var listItems = flickingViewport.querySelectorAll('li.ds9RptR1');
-                for (var i = 0; i < listItems.length; i++) {{
-                    var link = listItems[i].querySelector('a[aria-labelledby^="view_type_guide_"]');
-                    if (link) {{
-                        allLinks.push(link);
-                    }}
-                }}
-            }}
-        }}
-        
-        console.log('총 링크 개수: ' + allLinks.length);
-        console.log('찾을 NV MID: ' + targetNvmid);
-        console.log('찾은 요소: ' + (targetResult ? '있음' : '없음'));
-        
-        // 디버깅 정보
         var debugInfo = {{
-            totalLinks: allLinks.length,
             targetNvmid: targetNvmid,
             foundNvmids: allFoundNvmids.slice(0, 20),
-            found: targetResult !== null,
+            found: aTagToClick !== null,
             matchedNvmid: foundNvmid,
             hasFlickingViewport: !!document.querySelector('.flicking-viewport'),
             hasListItems: document.querySelectorAll('li.ds9RptR1').length
         }};
-        console.log('디버깅 정보:', JSON.stringify(debugInfo));
         
-        if (targetResult) {{
-            // 요소가 보이지 않으면 스크롤 (클릭하기 전에만)
-            var rect = targetResult.getBoundingClientRect();
+        if (aTagToClick) {{
+            // 요소가 보이지 않으면 스크롤
+            var rect = aTagToClick.getBoundingClientRect();
             var isVisible = rect.width > 0 && rect.height > 0 && 
                            rect.top >= 0 && rect.left >= 0 &&
                            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
                            rect.right <= (window.innerWidth || document.documentElement.clientWidth);
             
             if (!isVisible) {{
-                console.log('Element not visible, scrolling to view...');
-                targetResult.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                aTagToClick.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
                 var scrollWait = 500;
                 var scrollWaitUntil = Date.now() + scrollWait;
                 while (Date.now() < scrollWaitUntil) {{
@@ -1006,42 +1028,79 @@ def create_click_result_script(config_nvmid):
             }}
             
             // 요소가 클릭 가능한지 확인
-            var computedStyle = window.getComputedStyle(targetResult);
+            var computedStyle = window.getComputedStyle(aTagToClick);
             var isClickable = computedStyle.display !== 'none' && 
                              computedStyle.visibility !== 'hidden' &&
                              computedStyle.pointerEvents !== 'none';
             
             if (!isClickable) {{
-                console.log('Element is not clickable');
-                return {{ success: false, nvmid: foundNvmid, reason: 'not_clickable', debug: debugInfo }};
+                return {{ 
+                    success: false, 
+                    nvmid: foundNvmid, 
+                    reason: 'not_clickable', 
+                    debug: debugInfo,
+                    log: 'a 태그가 클릭 불가능함'
+                }};
             }}
             
-            console.log('Clicking product with NV MID: ' + foundNvmid);
+            // 클릭 전 정보 수집
+            var originalHref = window.location.href;
+            var aTagHref = aTagToClick.href || aTagToClick.getAttribute('href');
+            var aTagRect = aTagToClick.getBoundingClientRect();
             
-            // 여러 방법으로 클릭 시도
-            // mobile 로 무조건 href 로 이동하도록 해야됨.
+            // a 태그 클릭 이벤트 발생
+            var clickError = null;
+            var clickExecuted = false;
+            
             try {{
-                targetResult.click();
+                aTagToClick.click();
+                clickExecuted = true;
             }} catch (e) {{
-                console.log('Direct click failed, trying mouse event');
-                try {{
-                    var clickEvent = new MouseEvent('click', {{
-                        view: window,
-                        bubbles: true,
-                        cancelable: true
-                    }});
-                    targetResult.dispatchEvent(clickEvent);
-                }} catch (e2) {{
-                    console.log('MouseEvent click failed, trying href navigation');
-                    if (targetResult.href) {{
-                        window.location.href = targetResult.href;
-                    }} else {{
-                        return {{ success: false, nvmid: foundNvmid, reason: 'click_failed', debug: debugInfo }};
-                    }}
-                }}
+                clickError = e.toString();
             }}
             
-            return {{ success: true, nvmid: foundNvmid, debug: debugInfo }};
+            // 클릭 후 잠시 대기하여 URL 변경 확인
+            var waitForNavigation = 500;
+            var waitUntil = Date.now() + waitForNavigation;
+            while (Date.now() < waitUntil) {{
+                // busy wait
+            }}
+            
+            var newHref = window.location.href;
+            var urlChanged = newHref !== originalHref;
+            
+            // 로그 정보
+            var logInfo = {{
+                clickExecuted: clickExecuted,
+                clickError: clickError,
+                originalUrl: originalHref,
+                newUrl: newHref,
+                urlChanged: urlChanged,
+                aTagHref: aTagHref,
+                aTagPosition: {{
+                    x: aTagRect.left,
+                    y: aTagRect.top,
+                    width: aTagRect.width,
+                    height: aTagRect.height
+                }}
+            }};
+            
+            if (clickExecuted && urlChanged) {{
+                return {{ 
+                    success: true, 
+                    nvmid: foundNvmid, 
+                    debug: debugInfo,
+                    log: logInfo
+                }};
+            }} else {{
+                return {{ 
+                    success: false, 
+                    nvmid: foundNvmid, 
+                    reason: clickError ? 'click_error' : 'url_not_changed',
+                    debug: debugInfo,
+                    log: logInfo
+                }};
+            }}
         }}
         
         return {{ success: false, nvmid: null, reason: 'nvmid_not_found', debug: debugInfo }};
@@ -1049,6 +1108,70 @@ def create_click_result_script(config_nvmid):
     """
     
     return click_result_script
+
+
+def create_click_result_script_mobile(config_nvmid):
+    """
+    NV MID로 검색 결과의 a 태그를 찾아서
+    클릭하지 않고 => 좌표(rect)를 반환하는 JS 생성
+    """
+    click_result_script = f"""
+    (function() {{
+        var targetNvmid = '{config_nvmid}';
+        var aTag = null;
+        var foundNvmid = null;
+
+        var maxWait = 5000;
+        var startTime = Date.now();
+
+        while (!aTag && (Date.now() - startTime) < maxWait) {{
+            var listItems = document.querySelectorAll('li.ds9RptR1 a[aria-labelledby^="view_type_guide_"]');
+            
+            for (var i = 0; i < listItems.length; i++) {{
+                var el = listItems[i];
+                var aria = el.getAttribute('aria-labelledby');
+
+                if (!aria) continue;
+
+                var nvmid = aria.replace('view_type_guide_', '');
+                
+                if (nvmid === targetNvmid) {{
+                    aTag = el;
+                    foundNvmid = nvmid;
+                    break;
+                }}
+            }}
+
+            if (!aTag) {{
+                var waitUntil = Date.now() + 100;
+                while (Date.now() < waitUntil) {{}}
+            }}
+        }}
+
+        if (!aTag) {{
+            return {{
+                success: false,
+                reason: "not_found",
+                nvmid: null
+            }};
+        }}
+
+        // 좌표 반환
+        var r = aTag.getBoundingClientRect();
+
+        return {{
+            success: true,
+            nvmid: foundNvmid,
+            rect: {{
+                x: r.left + (r.width / 2),
+                y: r.top  + (r.height / 2),
+                width: r.width,
+                height: r.height
+            }}
+        }};
+    }})();
+    """
+    return click_result_script_mobile
 
 def run_crawling_task_cdtp(chrome_dt, iteration):
     """
@@ -1068,7 +1191,7 @@ def run_crawling_task_cdtp(chrome_dt, iteration):
         logger.info(f"Chrome DevTools 기반 크롤링 작업 시작 - 반복: {iteration:02d}")
         logger.info("=" * 50)
         
-        # 1. 네이버 접속
+        # 1. 네이버 접속 - m.naver.com 으로 접속
         naver_url = config.NAVER_MOBILE_URL
         current_url = chrome_dt.get_current_url()
         logger.info(f"현재 URL: {current_url}")
@@ -1082,7 +1205,7 @@ def run_crawling_task_cdtp(chrome_dt, iteration):
             time.sleep(3)
         else:
             logger.info(f"이미 네이버 페이지에 있습니다: {current_url}")
-        
+                
         # 2. 메인 키워드 검색
         main_keyword = config.MAIN_KEYWORD_LIST
         logger.info(f"메인 키워드 검색: {main_keyword}")
@@ -1249,204 +1372,23 @@ def run_crawling_task_cdtp(chrome_dt, iteration):
         logger.info("기본 검색어 NV MID로 검색 결과 찾기")
         config_nvmid = config.NV_MID_2
         logger.info(f"찾을 NV MID: {config_nvmid}")
-
-        # click_result_script = f"""
-        # (function() {{
-        #     var targetNvmid = '{config_nvmid}';
-        #     var targetAriaId = 'view_type_guide_' + targetNvmid;
-        #     var targetResult = null;
-        #     var foundNvmid = null;
-        #     var allFoundNvmids = [];  // 디버깅용
-            
-        #     // 요소가 나타날 때까지 대기 (최대 5초)
-        #     var maxWait = 5000;
-        #     var startTime = Date.now();
-        #     var allLinks = [];
-            
-        #     // HTML 구조를 차례대로 타고 들어가면서 찾기
-        #     while (targetResult === null && (Date.now() - startTime) < maxWait) {{
-        #         // 1단계: .flicking-viewport 찾기
-        #         var flickingViewport = document.querySelector('.flicking-viewport');
-        #         console.log('1단계: flicking-viewport 존재: ' + !!flickingViewport);
-                
-        #         if (flickingViewport) {{
-        #             // 2단계: flicking-viewport 안에서 li.ds9RptR1 찾기
-        #             var listItems = flickingViewport.querySelectorAll('li.ds9RptR1');
-        #             console.log('2단계: li.ds9RptR1 개수: ' + listItems.length);
-                    
-        #             // 3단계: 각 li를 순회하면서 a 태그 찾기
-        #             for (var i = 0; i < listItems.length; i++) {{
-        #                 var listItem = listItems[i];
-        #                 var link = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
-                        
-        #                 if (link) {{
-        #                     // 4단계: aria-labelledby 속성에서 view_type_guide_ 뒤의 번호 추출
-        #                     var ariaId = link.getAttribute('aria-labelledby');
-        #                     console.log('3단계: 링크 ' + i + '의 aria-labelledby: ' + ariaId);
-                            
-        #                     if (ariaId && ariaId.startsWith('view_type_guide_')) {{
-        #                         var nvmid = ariaId.replace('view_type_guide_', '');
-        #                         allFoundNvmids.push(nvmid);  // 디버깅용
-        #                         console.log('4단계: 추출한 NV MID: ' + nvmid + ', 찾을 NV MID: ' + targetNvmid);
-                                
-        #                         // 5단계: 번호가 일치하는지 확인
-        #                         if (nvmid === targetNvmid) {{
-        #                             targetResult = link;
-        #                             foundNvmid = nvmid;
-        #                             console.log('✓ NV MID 일치하는 요소 찾음! 인덱스: ' + i + ', NV MID: ' + nvmid);
-        #                             break;
-        #                         }}
-        #                     }}
-        #                 }}
-        #             }}
-        #         }}
-                
-        #         // flicking-viewport가 없거나 찾지 못한 경우, 다른 구조 시도
-        #         if (!targetResult) {{
-        #             // 대안: ul > li.ds9RptR1 구조 찾기
-        #             var ulElements = document.querySelectorAll('ul');
-        #             console.log('대안: ul 요소 개수: ' + ulElements.length);
-                    
-        #             for (var u = 0; u < ulElements.length; u++) {{
-        #                 var ul = ulElements[u];
-        #                 var listItems = ul.querySelectorAll('li.ds9RptR1');
-                        
-        #                 for (var i = 0; i < listItems.length; i++) {{
-        #                     var listItem = listItems[i];
-        #                     var link = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
-                            
-        #                     if (link) {{
-        #                         var ariaId = link.getAttribute('aria-labelledby');
-        #                         if (ariaId && ariaId.startsWith('view_type_guide_')) {{
-        #                             var nvmid = ariaId.replace('view_type_guide_', '');
-        #                             allFoundNvmids.push(nvmid);
-                                    
-        #                             if (nvmid === targetNvmid) {{
-        #                                 targetResult = link;
-        #                                 foundNvmid = nvmid;
-        #                                 console.log('✓ NV MID 일치하는 요소 찾음! (ul 구조) 인덱스: ' + i + ', NV MID: ' + nvmid);
-        #                                 break;
-        #                             }}
-        #                         }}
-        #                     }}
-        #                 }}
-                        
-        #                 if (targetResult) break;
-        #             }}
-        #         }}
-                
-        #         // 여전히 찾지 못한 경우 대기
-        #         if (!targetResult) {{
-        #             var wait = 100;
-        #             var waitUntil = Date.now() + wait;
-        #             while (Date.now() < waitUntil) {{
-        #                 // busy wait
-        #             }}
-        #         }}
-        #     }}
-            
-        #     // 디버깅 정보 수집
-        #     if (allLinks.length === 0) {{
-        #         var flickingViewport = document.querySelector('.flicking-viewport');
-        #         if (flickingViewport) {{
-        #             var listItems = flickingViewport.querySelectorAll('li.ds9RptR1');
-        #             for (var i = 0; i < listItems.length; i++) {{
-        #                 var link = listItems[i].querySelector('a[aria-labelledby^="view_type_guide_"]');
-        #                 if (link) {{
-        #                     allLinks.push(link);
-        #                 }}
-        #             }}
-        #         }}
-        #     }}
-            
-        #     console.log('총 링크 개수: ' + allLinks.length);
-        #     console.log('찾을 NV MID: ' + targetNvmid);
-        #     console.log('찾은 요소: ' + (targetResult ? '있음' : '없음'));
-            
-        #     // 디버깅 정보
-        #     var debugInfo = {{
-        #         totalLinks: allLinks.length,
-        #         targetNvmid: targetNvmid,
-        #         foundNvmids: allFoundNvmids.slice(0, 20),
-        #         found: targetResult !== null,
-        #         matchedNvmid: foundNvmid,
-        #         hasFlickingViewport: !!document.querySelector('.flicking-viewport'),
-        #         hasListItems: document.querySelectorAll('li.ds9RptR1').length
-        #     }};
-        #     console.log('디버깅 정보:', JSON.stringify(debugInfo));
-            
-        #     if (targetResult) {{
-        #         // 요소가 보이지 않으면 스크롤 (클릭하기 전에만)
-        #         var rect = targetResult.getBoundingClientRect();
-        #         var isVisible = rect.width > 0 && rect.height > 0 && 
-        #                        rect.top >= 0 && rect.left >= 0 &&
-        #                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        #                        rect.right <= (window.innerWidth || document.documentElement.clientWidth);
-                
-        #         if (!isVisible) {{
-        #             console.log('Element not visible, scrolling to view...');
-        #             targetResult.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
-        #             var scrollWait = 500;
-        #             var scrollWaitUntil = Date.now() + scrollWait;
-        #             while (Date.now() < scrollWaitUntil) {{
-        #                 // busy wait
-        #             }}
-        #         }}
-                
-        #         // 요소가 클릭 가능한지 확인
-        #         var computedStyle = window.getComputedStyle(targetResult);
-        #         var isClickable = computedStyle.display !== 'none' && 
-        #                          computedStyle.visibility !== 'hidden' &&
-        #                          computedStyle.pointerEvents !== 'none';
-                
-        #         if (!isClickable) {{
-        #             console.log('Element is not clickable');
-        #             return {{ success: false, nvmid: foundNvmid, reason: 'not_clickable', debug: debugInfo }};
-        #         }}
-                
-        #         console.log('Clicking product with NV MID: ' + foundNvmid);
-                
-        #         // 여러 방법으로 클릭 시도
-        #         try {{
-        #             targetResult.click();
-        #         }} catch (e) {{
-        #             console.log('Direct click failed, trying mouse event');
-        #             try {{
-        #                 var clickEvent = new MouseEvent('click', {{
-        #                     view: window,
-        #                     bubbles: true,
-        #                     cancelable: true
-        #                 }});
-        #                 targetResult.dispatchEvent(clickEvent);
-        #             }} catch (e2) {{
-        #                 console.log('MouseEvent click failed, trying href navigation');
-        #                 if (targetResult.href) {{
-        #                     window.location.href = targetResult.href;
-        #                 }} else {{
-        #                     return {{ success: false, nvmid: foundNvmid, reason: 'click_failed', debug: debugInfo }};
-        #                 }}
-        #             }}
-        #         }}
-                
-        #         return {{ success: true, nvmid: foundNvmid, debug: debugInfo }};
-        #     }}
-            
-        #     return {{ success: false, nvmid: null, reason: 'nvmid_not_found', debug: debugInfo }};
-        # }})();
-        # """
-
-        # click_result_script = create_click_result_script(config_nvmid) # 생 스크립트로 실행
-        # click_result_script = chrome_dt.execute_script(create_click_result_script(config_nvmid))
+        
+        # 클릭 전 URL 저장 (Python 로깅용)
+        try:
+            url_before_click = chrome_dt.get_current_url()
+            logger.info(f"[클릭 전] 현재 URL: {url_before_click}")
+        except Exception as e:
+            logger.warning(f"클릭 전 URL 확인 실패: {e}")
+            url_before_click = None
+        
         # 재시도 로직 추가
         max_retries = 1
         result = None
         for attempt in range(max_retries):
             logger.info(f"NV MID 검색 시도 {attempt + 1}/{max_retries}")
-            # logger.debug(f"스크립트 길이: {len(click_result_script)} 문자")
             
             try:
                 result = chrome_dt.execute_script(create_click_result_script(config_nvmid))
-                # result = chrome_dt.execute_script(click_result_script)
             except Exception as e:
                 logger.error(f"execute_script 실행 중 예외 발생: {e}")
                 result = None
@@ -1491,6 +1433,38 @@ def run_crawling_task_cdtp(chrome_dt, iteration):
         else:
             logger.info(f"스크립트 실행 결과 타입: {type(result)}")
             logger.info(f"스크립트 실행 결과: {result}")
+            
+            # 로그 정보 출력
+            if isinstance(result, dict) and 'log' in result:
+                log_info = result['log']
+                logger.info("=== 클릭 이벤트 로그 ===")
+                if isinstance(log_info, dict):
+                    logger.info(f"클릭 실행 여부: {log_info.get('clickExecuted', 'N/A')}")
+                    if log_info.get('clickError'):
+                        logger.error(f"클릭 에러: {log_info.get('clickError')}")
+                    logger.info(f"원본 URL: {log_info.get('originalUrl', 'N/A')}")
+                    logger.info(f"새 URL: {log_info.get('newUrl', 'N/A')}")
+                    logger.info(f"URL 변경 여부: {log_info.get('urlChanged', 'N/A')}")
+                    logger.info(f"a 태그 href: {log_info.get('aTagHref', 'N/A')}")
+                    if 'aTagPosition' in log_info:
+                        pos = log_info['aTagPosition']
+                        logger.info(f"a 태그 위치: x={pos.get('x')}, y={pos.get('y')}, width={pos.get('width')}, height={pos.get('height')}")
+                elif isinstance(log_info, str):
+                    logger.info(f"로그 메시지: {log_info}")
+                logger.info("======================")
+            
+            # 디버깅 정보 출력
+            if isinstance(result, dict) and 'debug' in result:
+                debug_info = result['debug']
+                logger.info("=== 디버깅 정보 ===")
+                logger.info(f"찾을 NV MID: {debug_info.get('targetNvmid', 'N/A')}")
+                logger.info(f"일치하는 NV MID: {debug_info.get('matchedNvmid', 'N/A')}")
+                logger.info(f"a 태그 찾음: {debug_info.get('found', False)}")
+                logger.info(f"찾은 NV MID 목록 (최대 20개): {debug_info.get('foundNvmids', [])}")
+                logger.info(f"flicking-viewport 존재: {debug_info.get('hasFlickingViewport', False)}")
+                logger.info(f"li.ds9RptR1 개수: {debug_info.get('hasListItems', 0)}")
+                logger.info("==================")
+        
         if result and isinstance(result, dict):
             if result.get('success'):
                 found_nvmid = result.get('nvmid')

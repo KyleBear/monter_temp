@@ -1,0 +1,194 @@
+{
+  "driver1": {
+    "name": "chromedriver.exe",
+    "path": "chromedriver.exe",
+    "file_info": {
+      "path": "C:\\Users\\dev\\Desktop\\monter\\chrome_driver_difference\\chromedriver.exe",
+      "size": 19726336,
+      "size_mb": 18.81,
+      "modified": 1763619910.0
+    },
+    "version": "ChromeDriver 142.0.7444.59 (4b8153ab58d3c3f4c9f7e4baad9616ecf80db5fa-refs/branch-heads/7444_52@{#4})",
+    "help_text": "[1476 characters]",
+    "options": [
+      "--adb-port",
+      "--allowed-ips",
+      "--allowed-origins",
+      "--append-log",
+      "--bidi-mapper-path",
+      "--enable-chrome-logs",
+      "--ignore-explicit-port",
+      "--log-level",
+      "--log-path",
+      "--port",
+      "--readable-timestamp",
+      "--replayable",
+      "--silent",
+      "--url-base",
+      "--verbose",
+      "--version"
+    ],
+    "binary_keywords": {
+      "user_agent": [
+        "Android",
+        "iPad"
+      ],
+      "stealth": [],
+      "bot_detection": [
+        "bot",
+        "Bot",
+        "BOT"
+      ],
+      "mobile": [
+        "mobile",
+        "Mobile",
+        "MOBILE",
+        "android",
+        "Android",
+        "ANDROID",
+        "ios",
+        "iOS",
+        "IOS",
+        "ipad",
+        "iPad",
+        "IPAD",
+        "viewport",
+        "Viewport",
+        "VIEWPORT"
+      ]
+    },
+    "capabilities": {
+      "acceptInsecureCerts": "False",
+      "browserName": "chrome",
+      "browserVersion": "142.0.7444.176",
+      "chrome": "{'chromedriverVersion': '142.0.7444.59 (4b8153ab58d3c3f4c9f7e4baad9616ecf80db5fa-refs/branch-heads/7444_52@{#4})', 'userDataDir': 'C:\\\\Users\\\\dev\\\\AppData\\\\Local\\\\Temp\\\\scoped_dir1396_1695734253'}",
+      "fedcm:accounts": "True",
+      "goog:chromeOptions": "{'debuggerAddress': 'localhost:53655'}",
+      "goog:processID": "4420",
+      "networkConnectionEnabled": "False",
+      "pageLoadStrategy": "normal",
+      "platformName": "windows",
+      "proxy": "{}",
+      "setWindowRect": "True",
+      "strictFileInteractability": "False",
+      "timeouts": "{'implicit': 0, 'pageLoad': 300000, 'script': 30000}",
+      "unhandledPromptBehavior": "dismiss and notify",
+      "webauthn:extension:credBlob": "True",
+      "webauthn:extension:largeBlob": "True",
+      "webauthn:extension:minPinLength": "True",
+      "webauthn:extension:prf": "True",
+      "webauthn:virtualAuthenticators": "True",
+      "_detected_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/142.0.0.0 Safari/537.36",
+      "_webdriver_detected": "True",
+      "_chrome_runtime": "True"
+    },
+    "error": null
+  },
+  "driver2": {
+    "name": "chromedriver_second.exe",
+    "path": "chromedriver_second.exe",
+    "file_info": {
+      "path": "C:\\Users\\dev\\Desktop\\monter\\chrome_driver_difference\\chromedriver_second.exe",
+      "size": 19726336,
+      "size_mb": 18.81,
+      "modified": 1763621514.0
+    },
+    "version": "ChromeDriver 142.0.7444.59 (4b8153ab58d3c3f4c9f7e4baad9616ecf80db5fa-refs/branch-heads/7444_52@{#4})",
+    "help_text": "[1483 characters]",
+    "options": [
+      "--adb-port",
+      "--allowed-ips",
+      "--allowed-origins",
+      "--append-log",
+      "--bidi-mapper-path",
+      "--enable-chrome-logs",
+      "--ignore-explicit-port",
+      "--log-level",
+      "--log-path",
+      "--port",
+      "--readable-timestamp",
+      "--replayable",
+      "--silent",
+      "--url-base",
+      "--verbose",
+      "--version"
+    ],
+    "binary_keywords": {
+      "user_agent": [
+        "Android",
+        "iPad"
+      ],
+      "stealth": [],
+      "bot_detection": [
+        "bot",
+        "Bot",
+        "BOT"
+      ],
+      "mobile": [
+        "mobile",
+        "Mobile",
+        "MOBILE",
+        "android",
+        "Android",
+        "ANDROID",
+        "ios",
+        "iOS",
+        "IOS",
+        "ipad",
+        "iPad",
+        "IPAD",
+        "viewport",
+        "Viewport",
+        "VIEWPORT"
+      ]
+    },
+    "capabilities": {
+      "acceptInsecureCerts": "False",
+      "browserName": "chrome",
+      "browserVersion": "142.0.7444.176",
+      "chrome": "{'chromedriverVersion': '142.0.7444.59 (4b8153ab58d3c3f4c9f7e4baad9616ecf80db5fa-refs/branch-heads/7444_52@{#4})', 'userDataDir': 'C:\\\\Users\\\\dev\\\\AppData\\\\Local\\\\Temp\\\\scoped_dir15444_949164632'}",
+      "fedcm:accounts": "True",
+      "goog:chromeOptions": "{'debuggerAddress': 'localhost:64362'}",
+      "goog:processID": "16952",
+      "networkConnectionEnabled": "False",
+      "pageLoadStrategy": "normal",
+      "platformName": "windows",
+      "proxy": "{}",
+      "setWindowRect": "True",
+      "strictFileInteractability": "False",
+      "timeouts": "{'implicit': 0, 'pageLoad': 300000, 'script': 30000}",
+      "unhandledPromptBehavior": "dismiss and notify",
+      "webauthn:extension:credBlob": "True",
+      "webauthn:extension:largeBlob": "True",
+      "webauthn:extension:minPinLength": "True",
+      "webauthn:extension:prf": "True",
+      "webauthn:virtualAuthenticators": "True",
+      "_detected_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/142.0.0.0 Safari/537.36",
+      "_webdriver_detected": "True",
+      "_chrome_runtime": "True"
+    },
+    "error": null
+  },
+  "comparison": {
+    "common_options": [
+      "--adb-port",
+      "--allowed-ips",
+      "--allowed-origins",
+      "--append-log",
+      "--bidi-mapper-path",
+      "--enable-chrome-logs",
+      "--ignore-explicit-port",
+      "--log-level",
+      "--log-path",
+      "--port",
+      "--readable-timestamp",
+      "--replayable",
+      "--silent",
+      "--url-base",
+      "--verbose",
+      "--version"
+    ],
+    "only_in_driver1": [],
+    "only_in_driver2": []
+  }
+}
