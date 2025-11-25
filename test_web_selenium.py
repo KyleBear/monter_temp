@@ -10,6 +10,7 @@ import subprocess
 import platform
 import shutil
 import tempfile
+from datetime import datetime
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -25,6 +26,7 @@ from test6 import DataConnectionManager
 from adb_manager import get_adb_manager
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from proxy_config.proxy_chain import WHITELIST_PROXIES
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,45 +35,45 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ip 변경으로 + 브라우저 + 변경 확인
-def change_ip(disable_duration=3):
-    """
-    IP 변경을 위해 데이터 연결을 끄고 켜기
+# def change_ip(disable_duration=3):
+#     """
+#     IP 변경을 위해 데이터 연결을 끄고 켜기
     
-    Args:
-        disable_duration: 데이터를 끈 상태로 유지할 시간(초), 기본값: 3초
+#     Args:
+#         disable_duration: 데이터를 끈 상태로 유지할 시간(초), 기본값: 3초
     
-    Returns:
-        bool: 성공 여부
-    """
-    try:
-        logger.info(f"[IP 변경] IP 변경 시작 (데이터 연결 끄기 시간: {disable_duration}초)")
+#     Returns:
+#         bool: 성공 여부
+#     """
+#     try:
+#         logger.info(f"[IP 변경] IP 변경 시작 (데이터 연결 끄기 시간: {disable_duration}초)")
         
-        # ADB Manager 초기화
-        adb = get_adb_manager()
+#         # ADB Manager 초기화
+#         adb = get_adb_manager()
         
-        # ADB 연결 확인
-        if not adb.check_connection():
-            logger.error(f"[IP 변경] ADB 연결 실패. IP 변경을 건너뜁니다.")
-            return False
+#         # ADB 연결 확인
+#         if not adb.check_connection():
+#             logger.error(f"[IP 변경] ADB 연결 실패. IP 변경을 건너뜁니다.")
+#             return False
         
-        # DataConnectionManager 생성
-        data_manager = DataConnectionManager(adb=adb)
+#         # DataConnectionManager 생성
+#         data_manager = DataConnectionManager(adb=adb)
         
-        # 데이터 연결 토글 (끄기 → 대기 → 켜기)
-        success = data_manager.toggle_data_connection(disable_duration=disable_duration)
+#         # 데이터 연결 토글 (끄기 → 대기 → 켜기)
+#         success = data_manager.toggle_data_connection(disable_duration=disable_duration)
         
-        if success:
-            logger.info(f"[IP 변경] ✓ IP 변경 완료")
-            # 네트워크 재연결 대기
-            time.sleep(5)
-            return True
-        else:
-            logger.warning(f"[IP 변경] ⚠ IP 변경 실패 (계속 진행)")
-            return False
+#         if success:
+#             logger.info(f"[IP 변경] ✓ IP 변경 완료")
+#             # 네트워크 재연결 대기
+#             time.sleep(5)
+#             return True
+#         else:
+#             logger.warning(f"[IP 변경] ⚠ IP 변경 실패 (계속 진행)")
+#             return False
             
-    except Exception as e:
-        logger.error(f"[IP 변경] IP 변경 중 오류: {e}", exc_info=True)
-        return False
+#     except Exception as e:
+#         logger.error(f"[IP 변경] IP 변경 중 오류: {e}", exc_info=True)
+#         return False
 
 
 class NaverCrawler:
@@ -356,25 +358,25 @@ class NaverCrawler:
         except Exception as e:
             logger.debug(f"[_kill_chrome_processes] 프로세스 확인 중 오류: {e}")
     
-    def human_delay(self, min_sec=1, max_sec=3):
-        """사람처럼 딜레이"""
-        time.sleep(random.uniform(min_sec, max_sec))
+    # def human_delay(self, min_sec=1, max_sec=3):
+    #     """사람처럼 딜레이"""
+    #     time.sleep(random.uniform(min_sec, max_sec))
     
-    def human_scroll(self, distance=None):
-        """사람처럼 스크롤"""
-        if distance is None:
-            distance = random.randint(300, 700)
-        self.driver.execute_script(f"window.scrollBy(0, {distance});")
-        self.human_delay(0.5, 1.5)
+    # def human_scroll(self, distance=None):
+    #     """사람처럼 스크롤"""
+    #     if distance is None:
+    #         distance = random.randint(300, 700)
+    #     self.driver.execute_script(f"window.scrollBy(0, {distance});")
+    #     self.human_delay(0.5, 1.5)
     
-    def human_type(self, element, text):
-        """사람처럼 타이핑"""
-        element.click()
-        self.human_delay(0.2, 0.5)
-        for char in text:
-            element.send_keys(char)
-            time.sleep(random.uniform(0.05, 0.2))
-        self.human_delay(0.3, 0.8)
+    # def human_type(self, element, text):
+    #     """사람처럼 타이핑"""
+    #     element.click()
+    #     self.human_delay(0.2, 0.5)
+    #     for char in text:
+    #         element.send_keys(char)
+    #         time.sleep(random.uniform(0.05, 0.2))
+    #     self.human_delay(0.3, 0.8)
     
     def navigate_to_naver(self):
         """네이버 접속"""
@@ -382,7 +384,7 @@ class NaverCrawler:
         self.driver.get("https://m.naver.com")
 
     def search_keyword(self, keyword):
-        """키워드 검색 (crawler_galaxy2.py 방식 - JavaScript 기반)"""
+        """키워드 검색 (JavaScript 기반)"""
         logger.info(f"키워드 검색: {keyword}")
         try:
             # 1. 검색창에 키워드 입력 (JavaScript)
@@ -575,7 +577,6 @@ class NaverCrawler:
         
         if result and isinstance(result, dict) and result.get('success'):
             logger.info(f"✓ 상품 클릭 완료: {result.get('nvmid')}")
-            # self.human_delay(2, 4)
             return True
         else:
             logger.warning(f"상품을 찾지 못했습니다: {result.get('reason') if result else 'unknown'}")
@@ -605,13 +606,13 @@ class NaverCrawler:
             logger.error(f"구매 추가정보 클릭 실패: {e}")
             return False
     
-    def random_behavior(self):
-        """랜덤 브라우징 행동"""
-        behaviors = [
-            lambda: self.human_scroll(random.randint(100, 300)),
-            lambda: self.human_delay(1, 2),
-        ]
-        random.choice(behaviors)()
+    # def random_behavior(self):
+    #     """랜덤 브라우징 행동"""
+    #     behaviors = [
+    #         lambda: self.human_scroll(random.randint(100, 300)),
+    #         lambda: self.human_delay(1, 2),
+    #     ]
+    #     random.choice(behaviors)()
     
     # def check_ip_simple(self):
     #     """간단한 IP 확인"""
@@ -1218,12 +1219,7 @@ def test_single_iteration(row_data, iteration_id, headless=False):
             logger.error(f"[반복 {iteration_id}] ✗ 크롤러 생성 실패: {e}", exc_info=True)
             return False
 
-        # IP 확인 (프록시 할당 확인)
-        # try:
-        #     current_ip = crawler.check_ip_simple()
-        #     logger.info(f"[반복 {iteration_id}] 현재 사용 중인 IP: {current_ip}")
-        # except Exception as e:
-        #     logger.warning(f"[반복 {iteration_id}] IP 확인 실패: {e}")
+
 
         logger.info(f"[반복 {iteration_id}] 모바일 모드로 전환 중...")
         if crawler.enable_mobile_mode():
@@ -1231,7 +1227,7 @@ def test_single_iteration(row_data, iteration_id, headless=False):
             logger.info(f"[반복 {iteration_id}] ✓ 모바일 버전 페이지 로드 완료")
         else:
             logger.warning(f"[반복 {iteration_id}] ⚠ 모바일 모드 전환 실패, 계속 진행...")                
-        # 네이버 접속
+        # 네이버 접속 # 검색어 삭제 클릭으로 바꾸기
         crawler.navigate_to_naver()
 
         # 메인 키워드 검색
@@ -1274,8 +1270,13 @@ def test_single_iteration(row_data, iteration_id, headless=False):
 
 def main():
     """메인 함수"""
+    # 시작 시간 기록
+    start_time = datetime.now()
+    start_time_str = start_time.strftime("%Y-%m-%d %H:%M:%S")
+    
     logger.info("=" * 50)
     logger.info("일반 셀레니움 크롤링 테스트 시작")
+    logger.info(f"시작 시간: {start_time_str}")
     logger.info("=" * 50)
     # change_ip()
     time.sleep(4)
@@ -1363,8 +1364,112 @@ def main():
     finally:
         # ⭐ 모든 쓰레드가 끝난 후 Chrome 세션 및 쿠키 정리
         cleanup_all_chrome_sessions()
+        
+        # 종료 시간 기록 및 파일 저장
+        end_time = datetime.now()
+        end_time_str = end_time.strftime("%Y-%m-%d %H:%M:%S")
+        elapsed_time = end_time - start_time
+        elapsed_seconds = elapsed_time.total_seconds()
+        
+        # 실행 시간 정보를 txt 파일로 저장
+        time_log_file = 'execution_time.txt'
+        with open(time_log_file, 'a', encoding='utf-8') as f:  # append 모드
+            f.write("=" * 60 + "\n")
+            f.write(f"실행 시간 기록 - {start_time_str}\n")
+            f.write("=" * 60 + "\n")
+            f.write(f"시작 시간: {start_time_str}\n")
+            f.write(f"종료 시간: {end_time_str}\n")
+            f.write(f"총 실행 시간: {elapsed_seconds:.2f}초 ({elapsed_seconds/60:.2f}분)\n")
+            f.write("=" * 60 + "\n\n")
+        
+        logger.info(f"실행 시간 기록 저장: {time_log_file}")
+        logger.info(f"시작 시간: {start_time_str}")
+        logger.info(f"종료 시간: {end_time_str}")
+        logger.info(f"총 실행 시간: {elapsed_seconds:.2f}초 ({elapsed_seconds/60:.2f}분)")
 
 
 if __name__ == '__main__':
-    main()
+    # proxy_chain.py에서 WHITELIST_PROXIES 개수 가져오기 (이미 상단에서 import됨)
+    proxy_count = len(WHITELIST_PROXIES)
+    logger.info(f"WHITELIST_PROXIES 개수: {proxy_count}개")
+    logger.info(f"main() 함수를 {proxy_count}번 실행합니다")
+    
+    # 전체 실행 시간 기록
+    total_start_time = datetime.now()
+    
+    execution_log = []
+    
+    for run_id in range(proxy_count):
+        run_start_time = datetime.now()
+        logger.info("=" * 60)
+        logger.info(f"=== 실행 {run_id + 1}/{proxy_count} ===")
+        logger.info(f"시작 시간: {run_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info("=" * 60)
+        
+        try:
+            main()
+            run_end_time = datetime.now()
+            run_elapsed = (run_end_time - run_start_time).total_seconds()
+            
+            execution_log.append({
+                'run_id': run_id + 1,
+                'start_time': run_start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'end_time': run_end_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'elapsed_seconds': run_elapsed,
+                'status': 'success'
+            })
+            
+            logger.info(f"실행 {run_id + 1}/{proxy_count} 완료 (소요 시간: {run_elapsed:.2f}초)")
+        except Exception as e:
+            run_end_time = datetime.now()
+            run_elapsed = (run_end_time - run_start_time).total_seconds()
+            
+            execution_log.append({
+                'run_id': run_id + 1,
+                'start_time': run_start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'end_time': run_end_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'elapsed_seconds': run_elapsed,
+                'status': 'error',
+                'error': str(e)
+            })
+            
+            logger.error(f"실행 {run_id + 1}/{proxy_count} 중 오류: {e}", exc_info=True)
+        
+        # 마지막 실행이 아니면 잠시 대기
+        if run_id < proxy_count - 1:
+            logger.info("다음 실행을 위해 5초 대기...")
+            time.sleep(5)
+    
+    total_end_time = datetime.now()
+    total_elapsed = (total_end_time - total_start_time).total_seconds()
+    
+    # 실행 시간 정보를 txt 파일로 저장
+    time_log_file = 'execution_time.txt'
+    with open(time_log_file, 'w', encoding='utf-8') as f:
+        f.write("=" * 60 + "\n")
+        f.write("test_web_selenium.py 실행 시간 기록\n")
+        f.write("=" * 60 + "\n")
+        f.write(f"전체 시작 시간: {total_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"전체 종료 시간: {total_end_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"전체 실행 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.2f}분)\n")
+        f.write(f"실행 횟수: {proxy_count}회\n")
+        f.write("\n" + "-" * 60 + "\n")
+        f.write("각 실행별 상세 기록\n")
+        f.write("-" * 60 + "\n\n")
+        
+        for log in execution_log:
+            f.write(f"실행 {log['run_id']}/{proxy_count}:\n")
+            f.write(f"  시작 시간: {log['start_time']}\n")
+            f.write(f"  종료 시간: {log['end_time']}\n")
+            f.write(f"  소요 시간: {log['elapsed_seconds']:.2f}초 ({log['elapsed_seconds']/60:.2f}분)\n")
+            f.write(f"  상태: {log['status']}\n")
+            if log.get('error'):
+                f.write(f"  오류: {log['error']}\n")
+            f.write("\n")
+    
+    logger.info("=" * 60)
+    logger.info("모든 실행 완료")
+    logger.info(f"전체 실행 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.2f}분)")
+    logger.info(f"실행 시간 기록 저장: {time_log_file}")
+    logger.info("=" * 60)
 
