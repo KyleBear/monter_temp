@@ -914,6 +914,26 @@ def create_click_result_script(config_nvmid):
         var foundNvmid = null;
         var allFoundNvmids = [];  // 디버깅용
         
+        // 광고 태그 확인 함수
+        function isAdTag(listItem) {{
+            // 방법 1: pbjVN80V 클래스를 가진 div가 있는지 확인
+            if (listItem.querySelector('.pbjVN80V')) {{
+                return true;
+            }}
+            // 방법 2: SucLwbaS 클래스를 가진 a 태그가 있는지 확인
+            if (listItem.querySelector('a.SucLwbaS')) {{
+                return true;
+            }}
+            // 방법 3: "광고" 텍스트를 가진 blind 클래스 span이 있는지 확인
+            var blindSpans = listItem.querySelectorAll('span.blind');
+            for (var i = 0; i < blindSpans.length; i++) {{
+                if (blindSpans[i].textContent.includes('광고')) {{
+                    return true;
+                }}
+            }}
+            return false;
+        }}
+        
         // 요소가 나타날 때까지 대기 (최대 5초)
         var maxWait = 5000;
         var startTime = Date.now();
@@ -928,9 +948,15 @@ def create_click_result_script(config_nvmid):
                 // 2단계: flicking-viewport 안에서 li.ds9RptR1 찾기
                 var listItems = flickingViewport.querySelectorAll('li.ds9RptR1');
                 
-                // 3단계: 각 li를 순회하면서 a 태그 찾기
+                // 3단계: 각 li를 순회하면서 a 태그 찾기 (광고 제외)
                 for (var i = 0; i < listItems.length; i++) {{
                     var listItem = listItems[i];
+                    
+                    // 광고 태그인지 확인 - 광고면 스킵
+                    if (isAdTag(listItem)) {{
+                        continue;
+                    }}
+                    
                     aTagToClick = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
                     
                     if (aTagToClick) {{
@@ -966,6 +992,12 @@ def create_click_result_script(config_nvmid):
                     
                     for (var i = 0; i < listItems.length; i++) {{
                         var listItem = listItems[i];
+                        
+                        // 광고 태그인지 확인 - 광고면 스킵
+                        if (isAdTag(listItem)) {{
+                            continue;
+                        }}
+                        
                         aTagToClick = listItem.querySelector('a[aria-labelledby^="view_type_guide_"]');
                         
                         if (aTagToClick) {{
