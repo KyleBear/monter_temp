@@ -26,6 +26,7 @@ from test6 import DataConnectionManager
 from adb_manager import get_adb_manager
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import multiprocessing
 from proxy_config.proxy_chain import WHITELIST_PROXIES
 
 logging.basicConfig(
@@ -34,46 +35,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ip 변경으로 + 브라우저 + 변경 확인
-# def change_ip(disable_duration=3):
-#     """
-#     IP 변경을 위해 데이터 연결을 끄고 켜기
-    
-#     Args:
-#         disable_duration: 데이터를 끈 상태로 유지할 시간(초), 기본값: 3초
-    
-#     Returns:
-#         bool: 성공 여부
-#     """
-#     try:
-#         logger.info(f"[IP 변경] IP 변경 시작 (데이터 연결 끄기 시간: {disable_duration}초)")
-        
-#         # ADB Manager 초기화
-#         adb = get_adb_manager()
-        
-#         # ADB 연결 확인
-#         if not adb.check_connection():
-#             logger.error(f"[IP 변경] ADB 연결 실패. IP 변경을 건너뜁니다.")
-#             return False
-        
-#         # DataConnectionManager 생성
-#         data_manager = DataConnectionManager(adb=adb)
-        
-#         # 데이터 연결 토글 (끄기 → 대기 → 켜기)
-#         success = data_manager.toggle_data_connection(disable_duration=disable_duration)
-        
-#         if success:
-#             logger.info(f"[IP 변경] ✓ IP 변경 완료")
-#             # 네트워크 재연결 대기
-#             time.sleep(5)
-#             return True
-#         else:
-#             logger.warning(f"[IP 변경] ⚠ IP 변경 실패 (계속 진행)")
-#             return False
-            
-#     except Exception as e:
-#         logger.error(f"[IP 변경] IP 변경 중 오류: {e}", exc_info=True)
-#         return False
+
 
 
 class NaverCrawler:
@@ -1388,21 +1350,17 @@ def main():
         logger.info(f"총 실행 시간: {elapsed_seconds:.2f}초 ({elapsed_seconds/60:.2f}분)")
 
 
-if __name__ == '__main__':
-    # proxy_chain.py에서 WHITELIST_PROXIES 개수 가져오기 (이미 상단에서 import됨)
-    proxy_count = len(WHITELIST_PROXIES)
-    logger.info(f"WHITELIST_PROXIES 개수: {proxy_count}개")
-    logger.info(f"main() 함수를 {proxy_count}번 실행합니다")
-    
-    # 전체 실행 시간 기록
-    total_start_time = datetime.now()
+def run_main_process(start_run, end_run, process_id):
+    """각 프로세스에서 실행할 함수"""
+    logger.info(f"[프로세스 {process_id}] 실행 범위: {start_run + 1} ~ {end_run}")
     
     execution_log = []
+    process_start_time = datetime.now()
     
-    for run_id in range(proxy_count):
+    for run_id in range(start_run, end_run):
         run_start_time = datetime.now()
         logger.info("=" * 60)
-        logger.info(f"=== 실행 {run_id + 1}/{proxy_count} ===")
+        logger.info(f"[프로세스 {process_id}] === 실행 {run_id + 1} ===")
         logger.info(f"시작 시간: {run_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info("=" * 60)
         
@@ -1412,6 +1370,7 @@ if __name__ == '__main__':
             run_elapsed = (run_end_time - run_start_time).total_seconds()
             
             execution_log.append({
+                'process_id': process_id,
                 'run_id': run_id + 1,
                 'start_time': run_start_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'end_time': run_end_time.strftime('%Y-%m-%d %H:%M:%S'),
@@ -1419,12 +1378,13 @@ if __name__ == '__main__':
                 'status': 'success'
             })
             
-            logger.info(f"실행 {run_id + 1}/{proxy_count} 완료 (소요 시간: {run_elapsed:.2f}초)")
+            logger.info(f"[프로세스 {process_id}] 실행 {run_id + 1} 완료 (소요 시간: {run_elapsed:.2f}초)")
         except Exception as e:
             run_end_time = datetime.now()
             run_elapsed = (run_end_time - run_start_time).total_seconds()
             
             execution_log.append({
+                'process_id': process_id,
                 'run_id': run_id + 1,
                 'start_time': run_start_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'end_time': run_end_time.strftime('%Y-%m-%d %H:%M:%S'),
@@ -1433,32 +1393,32 @@ if __name__ == '__main__':
                 'error': str(e)
             })
             
-            logger.error(f"실행 {run_id + 1}/{proxy_count} 중 오류: {e}", exc_info=True)
+            logger.error(f"[프로세스 {process_id}] 실행 {run_id + 1} 중 오류: {e}", exc_info=True)
         
         # 마지막 실행이 아니면 잠시 대기
-        if run_id < proxy_count - 1:
-            logger.info("다음 실행을 위해 5초 대기...")
+        if run_id < end_run - 1:
+            logger.info(f"[프로세스 {process_id}] 다음 실행을 위해 5초 대기...")
             time.sleep(5)
     
-    total_end_time = datetime.now()
-    total_elapsed = (total_end_time - total_start_time).total_seconds()
+    process_end_time = datetime.now()
+    process_elapsed = (process_end_time - process_start_time).total_seconds()
     
-    # 실행 시간 정보를 txt 파일로 저장
-    time_log_file = 'execution_time.txt'
+    # 프로세스별 실행 시간 기록
+    time_log_file = f'execution_time_process_{process_id}.txt'
     with open(time_log_file, 'w', encoding='utf-8') as f:
         f.write("=" * 60 + "\n")
-        f.write("test_web_selenium.py 실행 시간 기록\n")
+        f.write(f"test_web_selenium.py 실행 시간 기록 (프로세스 {process_id})\n")
         f.write("=" * 60 + "\n")
-        f.write(f"전체 시작 시간: {total_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"전체 종료 시간: {total_end_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"전체 실행 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.2f}분)\n")
-        f.write(f"실행 횟수: {proxy_count}회\n")
+        f.write(f"시작 시간: {process_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"종료 시간: {process_end_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"총 실행 시간: {process_elapsed:.2f}초 ({process_elapsed/60:.2f}분)\n")
+        f.write(f"실행 횟수: {end_run - start_run}회\n")
         f.write("\n" + "-" * 60 + "\n")
         f.write("각 실행별 상세 기록\n")
         f.write("-" * 60 + "\n\n")
         
         for log in execution_log:
-            f.write(f"실행 {log['run_id']}/{proxy_count}:\n")
+            f.write(f"실행 {log['run_id']}:\n")
             f.write(f"  시작 시간: {log['start_time']}\n")
             f.write(f"  종료 시간: {log['end_time']}\n")
             f.write(f"  소요 시간: {log['elapsed_seconds']:.2f}초 ({log['elapsed_seconds']/60:.2f}분)\n")
@@ -1467,9 +1427,77 @@ if __name__ == '__main__':
                 f.write(f"  오류: {log['error']}\n")
             f.write("\n")
     
+    logger.info(f"[프로세스 {process_id}] 실행 완료 (총 소요 시간: {process_elapsed:.2f}초)")
+    return execution_log
+
+
+if __name__ == '__main__':
+    # multiprocessing을 위한 설정
+    multiprocessing.freeze_support()
+    
+    # proxy_chain.py에서 WHITELIST_PROXIES 개수 가져오기 (이미 상단에서 import됨)
+    proxy_count = len(WHITELIST_PROXIES)
+    logger.info(f"WHITELIST_PROXIES 개수: {proxy_count}개")
+    
+    # 프로세스 개수 설정
+    num_processes = 3
+    runs_per_process = proxy_count // num_processes
+    remainder = proxy_count % num_processes
+    
+    logger.info(f"프로세스 개수: {num_processes}개")
+    logger.info(f"각 프로세스당 실행 횟수: 약 {runs_per_process}회")
+    
+    # 전체 실행 시간 기록
+    total_start_time = datetime.now()
+    
+    # 프로세스별 실행 범위 계산
+    processes = []
+    start_run = 0
+    
+    for i in range(num_processes):
+        # 마지막 프로세스는 나머지도 처리
+        end_run = start_run + runs_per_process + (1 if i < remainder else 0)
+        
+        if start_run < proxy_count:
+            p = multiprocessing.Process(
+                target=run_main_process,
+                args=(start_run, end_run, i + 1)
+            )
+            processes.append(p)
+            logger.info(f"프로세스 {i + 1}: 실행 {start_run + 1} ~ {end_run}")
+            start_run = end_run
+    
+    # 모든 프로세스 시작
     logger.info("=" * 60)
-    logger.info("모든 실행 완료")
+    logger.info("모든 프로세스 시작")
+    logger.info("=" * 60)
+    
+    for p in processes:
+        p.start()
+    
+    # 모든 프로세스 완료 대기
+    for p in processes:
+        p.join()
+    
+    total_end_time = datetime.now()
+    total_elapsed = (total_end_time - total_start_time).total_seconds()
+    
+    # 전체 실행 시간 정보를 txt 파일로 저장
+    time_log_file = 'execution_time_total.txt'
+    with open(time_log_file, 'w', encoding='utf-8') as f:
+        f.write("=" * 60 + "\n")
+        f.write("test_web_selenium.py 전체 실행 시간 기록\n")
+        f.write("=" * 60 + "\n")
+        f.write(f"전체 시작 시간: {total_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"전체 종료 시간: {total_end_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"전체 실행 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.2f}분)\n")
+        f.write(f"프로세스 개수: {num_processes}개\n")
+        f.write(f"총 실행 횟수: {proxy_count}회\n")
+        f.write("=" * 60 + "\n")
+    
+    logger.info("=" * 60)
+    logger.info("모든 프로세스 완료")
     logger.info(f"전체 실행 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.2f}분)")
-    logger.info(f"실행 시간 기록 저장: {time_log_file}")
+    logger.info(f"전체 실행 시간 기록 저장: {time_log_file}")
     logger.info("=" * 60)
 
