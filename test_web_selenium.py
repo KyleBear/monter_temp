@@ -77,10 +77,11 @@ def change_ip(disable_duration=3):
 class NaverCrawler:
     """일반 셀레니움 네이버 크롤러 (로컬 Chrome)"""
     
-    def __init__(self, instance_id=None, headless=False):
+    def __init__(self, instance_id=None, headless=False, use_proxy=True):
         logger.info(f"[NaverCrawler] 초기화 시작 (인스턴스 ID: {instance_id})")
         self.driver = None
         self.instance_id = instance_id
+        self.use_proxy = use_proxy
         try:
             self._setup_driver(headless)
             logger.info(f"[NaverCrawler] 초기화 완료 (인스턴스 ID: {instance_id})")
@@ -94,6 +95,11 @@ class NaverCrawler:
         
         # Chrome 옵션 설정
         options = Options()
+        
+        # 프록시 설정 (proxy_chain.py를 통해)
+        if self.use_proxy:
+            options.add_argument('--proxy-server=socks5://127.0.0.1:1080')
+            logger.info("[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080")
         
         # 기본 옵션
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
@@ -607,6 +613,18 @@ class NaverCrawler:
         ]
         random.choice(behaviors)()
     
+    # def check_ip_simple(self):
+    #     """간단한 IP 확인"""
+    #     try:
+    #         self.driver.get("https://api.ipify.org")
+    #         time.sleep(2)
+    #         ip = self.driver.find_element(By.TAG_NAME, "body").text.strip()
+    #         logger.info(f"[IP 확인] 현재 사용 중인 IP: {ip}")
+    #         return ip
+    #     except Exception as e:
+    #         logger.error(f"[IP 확인] 실패: {e}")
+    #         return None
+    
     def close(self):
         """드라이버 종료"""
         if self.driver:
@@ -1062,7 +1080,6 @@ def create_click_result_script_mobile(config_nvmid):
         }};
     }})();
     """
-    
     return click_result_script
 
 
@@ -1201,6 +1218,13 @@ def test_single_iteration(row_data, iteration_id, headless=False):
             logger.error(f"[반복 {iteration_id}] ✗ 크롤러 생성 실패: {e}", exc_info=True)
             return False
 
+        # IP 확인 (프록시 할당 확인)
+        # try:
+        #     current_ip = crawler.check_ip_simple()
+        #     logger.info(f"[반복 {iteration_id}] 현재 사용 중인 IP: {current_ip}")
+        # except Exception as e:
+        #     logger.warning(f"[반복 {iteration_id}] IP 확인 실패: {e}")
+
         logger.info(f"[반복 {iteration_id}] 모바일 모드로 전환 중...")
         if crawler.enable_mobile_mode():
             logger.info(f"[반복 {iteration_id}] ✓ 모바일 모드 전환 완료")
@@ -1227,7 +1251,6 @@ def test_single_iteration(row_data, iteration_id, headless=False):
         if 'base_search_keyword' in row_data and pd.notna(row_data['base_search_keyword']):
             crawler.search_keyword(row_data['base_search_keyword'])
             time.sleep(4)
-        # pdb.set_trace()
         # nvmid로 상품 클릭
         if 'nv_mid' in row_data and pd.notna(row_data['nv_mid']):
             crawler.click_by_nvmid(str(row_data['nv_mid']))
@@ -1260,11 +1283,7 @@ def main():
     csv_file = 'keyword_data.csv'
     
     if not os.path.exists(csv_file):
-        logger.error(f"CSV 파일을 찾을 수 없습니다: {csv_file}")
-        logger.info("CSV 파일 형식:")
-        logger.info("  - main_keyword: 메인 키워드")
-        logger.info("  - base_search_keyword: 새 검색어")
-        logger.info("  - nv_mid: 상품 ID")
+
         return
     
     # CSV 로드

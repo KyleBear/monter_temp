@@ -9,4 +9,6 @@ redis==5.0.1
 adb-shell==0.4.4
 websocket-client>=1.6.0
 requests>=2.31.0
+aiohttp>=3.9.0
+PySocks>=1.7.1
 
