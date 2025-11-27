@@ -1,0 +1,26 @@
+2025-11-27 18:47:23,510 - ERROR - proxy_chain.py 실행 중 오류: There is no current event loop in thread 'Thread-1'.
+Traceback (most recent call last):
+  File "scheduler.py", line 233, in run_proxy_chain_async
+    proxy_chain_module.main()
+  File "proxy_config\proxy_chain.py", line 705, in main
+    server = ProxyChainServer(
+  File "proxy_config\proxy_chain.py", line 112, in __init__
+    self.proxy_lock = asyncio.Lock()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\locks.py", line 164, in __init__
+    self._loop = events.get_event_loop()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\events.py", line 639, in get_event_loop
+    raise RuntimeError('There is no current event loop in thread %r.'
+RuntimeError: There is no current event loop in thread 'Thread-1'.
+2025-11-27 18:52:19,546 - ERROR - proxy_chain.py 실행 중 오류: There is no current event loop in thread 'Thread-1'.
+Traceback (most recent call last):
+  File "scheduler.py", line 233, in run_proxy_chain_async
+    proxy_chain_module.main()
+  File "proxy_config\proxy_chain.py", line 705, in main
+    server = ProxyChainServer(
+  File "proxy_config\proxy_chain.py", line 112, in __init__
+    self.proxy_lock = asyncio.Lock()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\locks.py", line 164, in __init__
+    self._loop = events.get_event_loop()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\events.py", line 639, in get_event_loop
+    raise RuntimeError('There is no current event loop in thread %r.'
+RuntimeError: There is no current event loop in thread 'Thread-1'.

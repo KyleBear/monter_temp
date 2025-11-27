@@ -1,0 +1,226 @@
+2025-11-27 18:46:30,920 - __main__ - INFO - ============================================================
+2025-11-27 18:46:30,920 - __main__ - INFO - 즉시 실행: 프록시 테스트
+2025-11-27 18:46:30,920 - __main__ - INFO - ============================================================
+2025-11-27 18:46:30,920 - __main__ - INFO - ============================================================
+2025-11-27 18:46:30,920 - __main__ - INFO - test_ip_connect.py 실행 시작
+2025-11-27 18:46:30,921 - __main__ - INFO - ============================================================
+2025-11-27 18:47:19,158 - __main__ - INFO - 스케줄러 종료
+2025-11-27 18:47:23,499 - __main__ - INFO - ============================================================
+2025-11-27 18:47:23,499 - __main__ - INFO - 즉시 실행: 쿠키 수집
+2025-11-27 18:47:23,500 - __main__ - INFO - ============================================================
+2025-11-27 18:47:23,500 - __main__ - INFO - ============================================================
+2025-11-27 18:47:23,500 - __main__ - INFO - 프록시 체인 시작 및 쿠키 수집 작업 시작
+2025-11-27 18:47:23,500 - __main__ - INFO - ============================================================
+2025-11-27 18:47:23,509 - __main__ - WARNING - whitelist_proxies.json 파일이 없습니다: proxy_config\whitelist_proxies.json
+2025-11-27 18:47:23,509 - __main__ - WARNING - 성공한 프록시 목록을 로드할 수 없습니다. 기본 WHITELIST_PROXIES 사용
+2025-11-27 18:47:23,510 - __main__ - INFO - ✓ proxy_chain.py 스레드 시작
+2025-11-27 18:47:23,510 - error - ERROR - proxy_chain.py 실행 중 오류: There is no current event loop in thread 'Thread-1'.
+Traceback (most recent call last):
+  File "scheduler.py", line 233, in run_proxy_chain_async
+    proxy_chain_module.main()
+  File "proxy_config\proxy_chain.py", line 705, in main
+    server = ProxyChainServer(
+  File "proxy_config\proxy_chain.py", line 112, in __init__
+    self.proxy_lock = asyncio.Lock()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\locks.py", line 164, in __init__
+    self._loop = events.get_event_loop()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\events.py", line 639, in get_event_loop
+    raise RuntimeError('There is no current event loop in thread %r.'
+RuntimeError: There is no current event loop in thread 'Thread-1'.
+2025-11-27 18:47:43,524 - __main__ - WARNING - ⚠ proxy_chain.py 서버 시작 확인 실패 (계속 진행)
+2025-11-27 18:47:48,525 - __main__ - INFO - ============================================================
+2025-11-27 18:47:48,526 - __main__ - INFO - collect_naver_cookies.py 실행 시작
+2025-11-27 18:47:48,526 - __main__ - INFO - ============================================================
+2025-11-27 18:48:00,423 - __main__ - INFO - collect_naver_cookies.py 실행 완료 (반환 코드: 0)
+2025-11-27 18:48:00,423 - __main__ - WARNING - 오류:
+2025-11-27 18:47:48,798 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 18:47:48,799 - __main__ - INFO - ============================================================
+2025-11-27 18:47:48,799 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 18:47:48,799 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 18:47:48,799 - __main__ - INFO - ============================================================
+2025-11-27 18:47:48,799 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 18:47:48,799 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 18:47:48,799 - __main__ - INFO - [드라이버 설정] Chrome 바이너리 경로 지정: C:\Program Files\Google\Chrome\Application\chrome.exe
+2025-11-27 18:47:48,799 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 61.84.88.188:1236)
+2025-11-27 18:47:50,069 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 생성 성공
+2025-11-27 18:47:50,069 - __main__ - INFO - [쿠키 수집] m.naver.com 접속 중...
+2025-11-27 18:47:54,238 - __main__ - ERROR - [쿠키 수집] 쿠키 수집 실패: Message: unknown error: net::ERR_PROXY_CONNECTION_FAILED
+  (Session info: chrome=138.0.7204.158)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff649936f65+76917]
+	GetHandleVerifier [0x0x7ff649936fc0+77008]
+	(No symbol) [0x0x7ff6496e9dea]
+	(No symbol) [0x0x7ff6496e6ba5]
+	(No symbol) [0x0x7ff6496d7879]
+	(No symbol) [0x0x7ff6496d9631]
+	(No symbol) [0x0x7ff6496d7b96]
+	(No symbol) [0x0x7ff6496d75f6]
+	(No symbol) [0x0x7ff6496d72ba]
+	(No symbol) [0x0x7ff6496d4e8b]
+	(No symbol) [0x0x7ff6496d570c]
+	(No symbol) [0x0x7ff6496edd9a]
+	(No symbol) [0x0x7ff64979143e]
+	(No symbol) [0x0x7ff64976846a]
+	(No symbol) [0x0x7ff64979065c]
+	(No symbol) [0x0x7ff649768243]
+	(No symbol) [0x0x7ff649731431]
+	(No symbol) [0x0x7ff6497321c3]
+	GetHandleVerifier [0x0x7ff649c0d29d+3051437]
+	GetHandleVerifier [0x0x7ff649c078f3+3028483]
+	GetHandleVerifier [0x0x7ff649c2588d+3151261]
+	GetHandleVerifier [0x0x7ff64995182e+185662]
+	GetHandleVerifier [0x0x7ff6499596ef+218111]
+	GetHandleVerifier [0x0x7ff64993fae4+112628]
+	GetHandleVerifier [0x0x7ff64993fc99+113065]
+	GetHandleVerifier [0x0x7ff649926c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+Traceback (most recent call last):
+  File "collect_naver_cookies.py", line 127, in collect_cookies
+    self.driver.get("https://m.naver.com")
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 393, in get
+    self.execute(Command.GET, {"url": url})
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 384, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.WebDriverException: Message: unknown error: net::ERR_PROXY_CONNECTION_FAILED
+  (Session info: chrome=138.0.7204.158)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff649936f65+76917]
+	GetHandleVerifier [0x0x7ff649936fc0+77008]
+	(No symbol) [0x0x7ff6496e9dea]
+	(No symbol) [0x0x7ff6496e6ba5]
+	(No symbol) [0x0x7ff6496d7879]
+	(No symbol) [0x0x7ff6496d9631]
+	(No symbol) [0x0x7ff6496d7b96]
+	(No symbol) [0x0x7ff6496d75f6]
+	(No symbol) [0x0x7ff6496d72ba]
+	(No symbol) [0x0x7ff6496d4e8b]
+	(No symbol) [0x0x7ff6496d570c]
+	(No symbol) [0x0x7ff6496edd9a]
+	(No symbol) [0x0x7ff64979143e]
+	(No symbol) [0x0x7ff64976846a]
+	(No symbol) [0x0x7ff64979065c]
+	(No symbol) [0x0x7ff649768243]
+	(No symbol) [0x0x7ff649731431]
+	(No symbol) [0x0x7ff6497321c3]
+	GetHandleVerifier [0x0x7ff649c0d29d+3051437]
+	GetHandleVerifier [0x0x7ff649c078f3+3028483]
+	GetHandleVerifier [0x0x7ff649c2588d+3151261]
+	GetHandleVerifier [0x0x7ff64995182e+185662]
+	GetHandleVerifier [0x0x7ff6499596ef+218111]
+	GetHandleVerifier [0x0x7ff64993fae4+112628]
+	GetHandleVerifier [0x0x7ff64993fc99+113065]
+	GetHandleVerifier [0x0x7ff649926c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+
+2025-11-27 18:47:54,240 - __main__ - WARNING - 수집된 쿠키가 없습니다
+2025-11-27 18:47:56,390 - __main__ - INFO - [드라이버 종료] Chrome 드라이버 종료 완료
+
+2025-11-27 18:48:00,425 - __main__ - INFO - 쿠키 수집 완료
+2025-11-27 18:52:19,542 - __main__ - INFO - ============================================================
+2025-11-27 18:52:19,542 - __main__ - INFO - 즉시 실행: 쿠키 수집
+2025-11-27 18:52:19,542 - __main__ - INFO - ============================================================
+2025-11-27 18:52:19,542 - __main__ - INFO - ============================================================
+2025-11-27 18:52:19,542 - __main__ - INFO - 프록시 체인 시작 및 쿠키 수집 작업 시작
+2025-11-27 18:52:19,542 - __main__ - INFO - ============================================================
+2025-11-27 18:52:19,545 - __main__ - WARNING - whitelist_proxies.json 파일이 없습니다: proxy_config\whitelist_proxies.json
+2025-11-27 18:52:19,545 - __main__ - WARNING - 성공한 프록시 목록을 로드할 수 없습니다. 기본 WHITELIST_PROXIES 사용
+2025-11-27 18:52:19,546 - __main__ - INFO - ✓ proxy_chain.py 스레드 시작
+2025-11-27 18:52:19,546 - error - ERROR - proxy_chain.py 실행 중 오류: There is no current event loop in thread 'Thread-1'.
+Traceback (most recent call last):
+  File "scheduler.py", line 233, in run_proxy_chain_async
+    proxy_chain_module.main()
+  File "proxy_config\proxy_chain.py", line 705, in main
+    server = ProxyChainServer(
+  File "proxy_config\proxy_chain.py", line 112, in __init__
+    self.proxy_lock = asyncio.Lock()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\locks.py", line 164, in __init__
+    self._loop = events.get_event_loop()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\events.py", line 639, in get_event_loop
+    raise RuntimeError('There is no current event loop in thread %r.'
+RuntimeError: There is no current event loop in thread 'Thread-1'.
+2025-11-27 18:52:26,548 - __main__ - INFO - 스케줄러 종료
+2025-11-27 19:00:07,469 - __main__ - INFO - ============================================================
+2025-11-27 19:00:07,469 - __main__ - INFO - 즉시 실행: 쿠키 수집
+2025-11-27 19:00:07,470 - __main__ - INFO - ============================================================
+2025-11-27 19:00:07,470 - __main__ - INFO - ============================================================
+2025-11-27 19:00:07,470 - __main__ - INFO - 프록시 체인 시작 및 쿠키 수집 작업 시작
+2025-11-27 19:00:07,470 - __main__ - INFO - ============================================================
+2025-11-27 19:00:07,475 - __main__ - WARNING - whitelist_proxies.json 파일이 없습니다: proxy_config\whitelist_proxies.json
+2025-11-27 19:00:07,475 - __main__ - WARNING - 성공한 프록시 목록을 로드할 수 없습니다. 기본 WHITELIST_PROXIES 사용
+2025-11-27 19:00:07,477 - __main__ - INFO - ✓ proxy_chain.py 스레드 시작
+2025-11-27 19:00:08,477 - __main__ - INFO - ✓ proxy_chain.py 서버 시작 확인 (포트 1080)
+2025-11-27 19:00:13,479 - __main__ - INFO - ============================================================
+2025-11-27 19:00:13,480 - __main__ - INFO - collect_naver_cookies.py 실행 시작
+2025-11-27 19:00:13,481 - __main__ - INFO - ============================================================
+2025-11-27 19:00:24,744 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,603 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,604 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,604 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,605 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,605 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,611 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,611 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:00:55,612 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,203 - __main__ - INFO - collect_naver_cookies.py 실행 완료 (반환 코드: 0)
+2025-11-27 19:01:14,204 - __main__ - WARNING - 오류:
+2025-11-27 19:00:13,685 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 19:00:13,685 - __main__ - INFO - ============================================================
+2025-11-27 19:00:13,685 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 19:00:13,685 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 19:00:13,685 - __main__ - INFO - ============================================================
+2025-11-27 19:00:13,685 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 19:00:13,686 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 19:00:13,686 - __main__ - INFO - [드라이버 설정] Chrome 바이너리 경로 지정: C:\Program Files\Google\Chrome\Application\chrome.exe
+2025-11-27 19:00:13,686 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 61.84.88.188:1236)
+2025-11-27 19:00:14,768 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 생성 성공
+2025-11-27 19:00:14,768 - __main__ - INFO - [쿠키 수집] m.naver.com 접속 중...
+2025-11-27 19:00:58,849 - __main__ - INFO - [쿠키 수집] 쿠키 생성 유도를 위한 페이지 상호작용 중...
+2025-11-27 19:01:04,870 - __main__ - INFO - [쿠키 수집] 스크롤 동작 완료
+2025-11-27 19:01:04,878 - __main__ - INFO - [쿠키 수집] 시도 1/5: 1개 쿠키 발견 (중요: 1/9)
+2025-11-27 19:01:07,903 - __main__ - INFO - [쿠키 수집] 시도 2/5: 7개 쿠키 발견 (중요: 7/9)
+2025-11-27 19:01:07,903 - __main__ - INFO - [쿠키 수집] 중요 쿠키 충분히 생성됨: {'SRT30', 'BUC', 'NACT', 'NAC', 'SRT5', 'MM_PF', 'NNB'}
+2025-11-27 19:01:07,910 - __main__ - INFO - [쿠키 수집] 총 7개의 쿠키 수집 완료
+2025-11-27 19:01:07,910 - __main__ - INFO - [쿠키 수집] 중요 쿠키 수집 현황:
+2025-11-27 19:01:07,910 - __main__ - INFO -   \u2713 수집됨 (7개): BUC, MM_PF, NAC, NACT, NNB, SRT30, SRT5
+2025-11-27 19:01:07,929 - __main__ - WARNING -   \u2717 누락됨 (2개): MM_search_homefeed, _naver_usersession_
+2025-11-27 19:01:07,929 - __main__ - INFO - [쿠키 수집] .naver.com: 7개 쿠키
+2025-11-27 19:01:07,933 - __main__ - INFO - [파일 저장] 쿠키 저장 완료: cookies_data\naver_cookies_2025-11-27_19-01-07_proxy-0.json
+2025-11-27 19:01:07,933 - __main__ - INFO - [파일 저장] 총 7개의 쿠키 저장됨
+2025-11-27 19:01:07,933 - __main__ - INFO - ============================================================
+2025-11-27 19:01:07,933 - __main__ - INFO - \u2713 네이버 쿠키 수집 및 저장 완료
+2025-11-27 19:01:07,933 - __main__ - INFO - 저장 위치: cookies_data\naver_cookies_2025-11-27_19-01-07_proxy-0.json
+2025-11-27 19:01:07,933 - __main__ - INFO - ============================================================
+2025-11-27 19:01:10,163 - __main__ - INFO - [드라이버 종료] Chrome 드라이버 종료 완료
+
+2025-11-27 19:01:14,206 - __main__ - INFO - 쿠키 수집 완료
+2025-11-27 19:01:14,211 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,212 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,212 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,212 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,213 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,213 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,213 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,213 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,214 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,214 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,214 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,214 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,214 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,215 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:01:14,215 - asyncio - ERROR - An open stream object is being garbage collected; call "stream.close()" explicitly.
+2025-11-27 19:08:46,971 - __main__ - INFO - ============================================================
+2025-11-27 19:08:46,972 - __main__ - INFO - PyScheduler (APScheduler) 시작
+2025-11-27 19:08:46,972 - __main__ - INFO - ============================================================
+2025-11-27 19:08:47,002 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 19:08:47,003 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 19:08:47,003 - __main__ - INFO - 등록된 스케줄:
+2025-11-27 19:08:47,003 - __main__ - INFO -   - 매일 06:00: test_ip_connect.py 실행 → 성공한 프록시만 WHITELIST_PROXIES에 추가
+2025-11-27 19:08:47,003 - __main__ - INFO -   - 매일 06:30: proxy_chain.py 시작 → collect_naver_cookies.py 실행
+2025-11-27 19:08:47,004 - __main__ - INFO - ============================================================
+2025-11-27 19:08:47,005 - apscheduler.scheduler - INFO - Added job "프록시 연결 테스트" to job store "default"
+2025-11-27 19:08:47,006 - apscheduler.scheduler - INFO - Added job "쿠키 수집" to job store "default"
+2025-11-27 19:08:47,006 - apscheduler.scheduler - INFO - Scheduler started

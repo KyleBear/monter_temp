@@ -313,3 +313,116 @@ Stacktrace:
 2025-11-27 12:53:30,287 - __main__ - INFO - 저장 위치: cookies_data\naver_cookies_2025-11-27_12-53-30_proxy-0.json
 2025-11-27 12:53:30,287 - __main__ - INFO - ============================================================
 2025-11-27 12:53:32,456 - __main__ - INFO - [드라이버 종료] Chrome 드라이버 종료 완료
+2025-11-27 18:47:48,798 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 18:47:48,799 - __main__ - INFO - ============================================================
+2025-11-27 18:47:48,799 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 18:47:48,799 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 18:47:48,799 - __main__ - INFO - ============================================================
+2025-11-27 18:47:48,799 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 18:47:48,799 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 18:47:48,799 - __main__ - INFO - [드라이버 설정] Chrome 바이너리 경로 지정: C:\Program Files\Google\Chrome\Application\chrome.exe
+2025-11-27 18:47:48,799 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 61.84.88.188:1236)
+2025-11-27 18:47:50,069 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 생성 성공
+2025-11-27 18:47:50,069 - __main__ - INFO - [쿠키 수집] m.naver.com 접속 중...
+2025-11-27 18:47:54,238 - __main__ - ERROR - [쿠키 수집] 쿠키 수집 실패: Message: unknown error: net::ERR_PROXY_CONNECTION_FAILED
+  (Session info: chrome=138.0.7204.158)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff649936f65+76917]
+	GetHandleVerifier [0x0x7ff649936fc0+77008]
+	(No symbol) [0x0x7ff6496e9dea]
+	(No symbol) [0x0x7ff6496e6ba5]
+	(No symbol) [0x0x7ff6496d7879]
+	(No symbol) [0x0x7ff6496d9631]
+	(No symbol) [0x0x7ff6496d7b96]
+	(No symbol) [0x0x7ff6496d75f6]
+	(No symbol) [0x0x7ff6496d72ba]
+	(No symbol) [0x0x7ff6496d4e8b]
+	(No symbol) [0x0x7ff6496d570c]
+	(No symbol) [0x0x7ff6496edd9a]
+	(No symbol) [0x0x7ff64979143e]
+	(No symbol) [0x0x7ff64976846a]
+	(No symbol) [0x0x7ff64979065c]
+	(No symbol) [0x0x7ff649768243]
+	(No symbol) [0x0x7ff649731431]
+	(No symbol) [0x0x7ff6497321c3]
+	GetHandleVerifier [0x0x7ff649c0d29d+3051437]
+	GetHandleVerifier [0x0x7ff649c078f3+3028483]
+	GetHandleVerifier [0x0x7ff649c2588d+3151261]
+	GetHandleVerifier [0x0x7ff64995182e+185662]
+	GetHandleVerifier [0x0x7ff6499596ef+218111]
+	GetHandleVerifier [0x0x7ff64993fae4+112628]
+	GetHandleVerifier [0x0x7ff64993fc99+113065]
+	GetHandleVerifier [0x0x7ff649926c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+Traceback (most recent call last):
+  File "collect_naver_cookies.py", line 127, in collect_cookies
+    self.driver.get("https://m.naver.com")
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 393, in get
+    self.execute(Command.GET, {"url": url})
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 384, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.WebDriverException: Message: unknown error: net::ERR_PROXY_CONNECTION_FAILED
+  (Session info: chrome=138.0.7204.158)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff649936f65+76917]
+	GetHandleVerifier [0x0x7ff649936fc0+77008]
+	(No symbol) [0x0x7ff6496e9dea]
+	(No symbol) [0x0x7ff6496e6ba5]
+	(No symbol) [0x0x7ff6496d7879]
+	(No symbol) [0x0x7ff6496d9631]
+	(No symbol) [0x0x7ff6496d7b96]
+	(No symbol) [0x0x7ff6496d75f6]
+	(No symbol) [0x0x7ff6496d72ba]
+	(No symbol) [0x0x7ff6496d4e8b]
+	(No symbol) [0x0x7ff6496d570c]
+	(No symbol) [0x0x7ff6496edd9a]
+	(No symbol) [0x0x7ff64979143e]
+	(No symbol) [0x0x7ff64976846a]
+	(No symbol) [0x0x7ff64979065c]
+	(No symbol) [0x0x7ff649768243]
+	(No symbol) [0x0x7ff649731431]
+	(No symbol) [0x0x7ff6497321c3]
+	GetHandleVerifier [0x0x7ff649c0d29d+3051437]
+	GetHandleVerifier [0x0x7ff649c078f3+3028483]
+	GetHandleVerifier [0x0x7ff649c2588d+3151261]
+	GetHandleVerifier [0x0x7ff64995182e+185662]
+	GetHandleVerifier [0x0x7ff6499596ef+218111]
+	GetHandleVerifier [0x0x7ff64993fae4+112628]
+	GetHandleVerifier [0x0x7ff64993fc99+113065]
+	GetHandleVerifier [0x0x7ff649926c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+
+2025-11-27 18:47:54,240 - __main__ - WARNING - 수집된 쿠키가 없습니다
+2025-11-27 18:47:56,390 - __main__ - INFO - [드라이버 종료] Chrome 드라이버 종료 완료
+2025-11-27 19:00:13,685 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 19:00:13,685 - __main__ - INFO - ============================================================
+2025-11-27 19:00:13,685 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 19:00:13,685 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 19:00:13,685 - __main__ - INFO - ============================================================
+2025-11-27 19:00:13,685 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 19:00:13,686 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 19:00:13,686 - __main__ - INFO - [드라이버 설정] Chrome 바이너리 경로 지정: C:\Program Files\Google\Chrome\Application\chrome.exe
+2025-11-27 19:00:13,686 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 61.84.88.188:1236)
+2025-11-27 19:00:14,768 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 생성 성공
+2025-11-27 19:00:14,768 - __main__ - INFO - [쿠키 수집] m.naver.com 접속 중...
+2025-11-27 19:00:58,849 - __main__ - INFO - [쿠키 수집] 쿠키 생성 유도를 위한 페이지 상호작용 중...
+2025-11-27 19:01:04,870 - __main__ - INFO - [쿠키 수집] 스크롤 동작 완료
+2025-11-27 19:01:04,878 - __main__ - INFO - [쿠키 수집] 시도 1/5: 1개 쿠키 발견 (중요: 1/9)
+2025-11-27 19:01:07,903 - __main__ - INFO - [쿠키 수집] 시도 2/5: 7개 쿠키 발견 (중요: 7/9)
+2025-11-27 19:01:07,903 - __main__ - INFO - [쿠키 수집] 중요 쿠키 충분히 생성됨: {'SRT30', 'BUC', 'NACT', 'NAC', 'SRT5', 'MM_PF', 'NNB'}
+2025-11-27 19:01:07,910 - __main__ - INFO - [쿠키 수집] 총 7개의 쿠키 수집 완료
+2025-11-27 19:01:07,910 - __main__ - INFO - [쿠키 수집] 중요 쿠키 수집 현황:
+2025-11-27 19:01:07,910 - __main__ - INFO -   ✓ 수집됨 (7개): BUC, MM_PF, NAC, NACT, NNB, SRT30, SRT5
+2025-11-27 19:01:07,929 - __main__ - WARNING -   ✗ 누락됨 (2개): MM_search_homefeed, _naver_usersession_
+2025-11-27 19:01:07,929 - __main__ - INFO - [쿠키 수집] .naver.com: 7개 쿠키
+2025-11-27 19:01:07,933 - __main__ - INFO - [파일 저장] 쿠키 저장 완료: cookies_data\naver_cookies_2025-11-27_19-01-07_proxy-0.json
+2025-11-27 19:01:07,933 - __main__ - INFO - [파일 저장] 총 7개의 쿠키 저장됨
+2025-11-27 19:01:07,933 - __main__ - INFO - ============================================================
+2025-11-27 19:01:07,933 - __main__ - INFO - ✓ 네이버 쿠키 수집 및 저장 완료
+2025-11-27 19:01:07,933 - __main__ - INFO - 저장 위치: cookies_data\naver_cookies_2025-11-27_19-01-07_proxy-0.json
+2025-11-27 19:01:07,933 - __main__ - INFO - ============================================================
+2025-11-27 19:01:10,163 - __main__ - INFO - [드라이버 종료] Chrome 드라이버 종료 완료

@@ -232,5 +232,9 @@ NNB	네이버 추적용 익명 사용자 ID
 SRT30, SRT5	요청 빈도 / 봇 탐지용 타임스탬프
 
 ####
-
+크롬 업데이트 제거 
+GoogleUpdate.exe 파일명 변경 
+파일 탐색기를 열고 다음 경로로 이동합니다: C:\Program Files (x86)\Google\Update.
+GoogleUpdate.exe 파일을 찾아 이름을 GoogleUpdate1.exe와 같이 변경
 Googleupdate2 로 바꿈.
+####
