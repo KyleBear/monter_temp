@@ -10,6 +10,8 @@ Table product {
   updated_at timestamp
 }
 
+# 한번에 bulk 로 insert select 해야하는 테이블
+
 Table proxy_status {
   proxy_id bigint [primary key, note: 'AUTO_INCREMENT']
   proxy_ip varchar
@@ -19,6 +21,8 @@ Table proxy_status {
   is_active boolean [note: '현재 사용 가능한지']
   last_checked timestamp
 }
+
+# 매일 6시 ip check list 로 돌아가는 테이블
 
 Table proxy_log {
   log_id bigint [primary key, note: 'AUTO_INCREMENT']
@@ -33,3 +37,15 @@ Table proxy_log {
 
 Ref: product.product_id < proxy_log.product_id
 Ref: proxy_status.proxy_id < proxy_log.proxy_id
+
+
+Table cookie_collection {
+  collection_id bigint [primary key, note: 'AUTO_INCREMENT']
+  proxy_id bigint [not null]
+  cookie_json json
+  created_at timestamp
+  updated_at timestamp
+}
+
+# 쿠키 수집 테이블 # 프록시 ip 포함 (프록시 id 로 join)
+Ref: proxy_status.proxy_id < cookie_collection.proxy_id

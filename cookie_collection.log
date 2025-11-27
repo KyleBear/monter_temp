@@ -1,0 +1,315 @@
+2025-11-27 12:42:50,039 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 12:42:50,043 - __main__ - INFO - ============================================================
+2025-11-27 12:42:50,043 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 12:42:50,043 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 12:42:50,043 - __main__ - INFO - ============================================================
+2025-11-27 12:42:50,043 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 12:42:50,044 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 12:42:50,044 - __main__ - INFO - [드라이버 설정] Chrome 138 바이너리 경로 지정: chrome_138_directory\chrome.exe
+2025-11-27 12:42:50,044 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 211.250.94.131:1201)
+2025-11-27 12:42:52,941 - __main__ - ERROR - [드라이버 설정] Chrome 드라이버 생성 실패: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+Traceback (most recent call last):
+  File "collect_naver_cookies.py", line 114, in _setup_driver
+    self.driver = webdriver.Chrome(service=service, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chrome\webdriver.py", line 45, in __init__
+    super().__init__(
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chromium\webdriver.py", line 66, in __init__
+    super().__init__(command_executor=executor, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 241, in __init__
+    self.start_session(capabilities)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 329, in start_session
+    response = self.execute(Command.NEW_SESSION, caps)["value"]
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 384, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+
+2025-11-27 12:42:52,966 - __main__ - ERROR - 쿠키 수집 중 오류 발생: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+Traceback (most recent call last):
+  File "collect_naver_cookies.py", line 227, in collect_naver_cookies
+    collector = NaverCookieCollector(use_proxy=True, proxy_index=proxy_index)
+  File "collect_naver_cookies.py", line 41, in __init__
+    self._setup_driver()
+  File "collect_naver_cookies.py", line 114, in _setup_driver
+    self.driver = webdriver.Chrome(service=service, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chrome\webdriver.py", line 45, in __init__
+    super().__init__(
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chromium\webdriver.py", line 66, in __init__
+    super().__init__(command_executor=executor, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 241, in __init__
+    self.start_session(capabilities)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 329, in start_session
+    response = self.execute(Command.NEW_SESSION, caps)["value"]
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 384, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+
+2025-11-27 12:44:33,762 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 12:44:33,762 - __main__ - INFO - ============================================================
+2025-11-27 12:44:33,762 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 12:44:33,762 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 12:44:33,762 - __main__ - INFO - ============================================================
+2025-11-27 12:44:33,762 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 12:44:33,762 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 12:44:33,762 - __main__ - INFO - [드라이버 설정] Chrome 138 바이너리 경로 지정: chrome_138_directory\chrome.exe
+2025-11-27 12:44:33,762 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 211.250.94.131:1201)
+2025-11-27 12:44:36,322 - __main__ - ERROR - [드라이버 설정] Chrome 드라이버 생성 실패: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+Traceback (most recent call last):
+  File "collect_naver_cookies.py", line 114, in _setup_driver
+    self.driver = webdriver.Chrome(service=service, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chrome\webdriver.py", line 45, in __init__
+    super().__init__(
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chromium\webdriver.py", line 66, in __init__
+    super().__init__(command_executor=executor, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 241, in __init__
+    self.start_session(capabilities)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 329, in start_session
+    response = self.execute(Command.NEW_SESSION, caps)["value"]
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 384, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+
+2025-11-27 12:44:36,323 - __main__ - ERROR - 쿠키 수집 중 오류 발생: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+Traceback (most recent call last):
+  File "collect_naver_cookies.py", line 227, in collect_naver_cookies
+    collector = NaverCookieCollector(use_proxy=True, proxy_index=proxy_index)
+  File "collect_naver_cookies.py", line 41, in __init__
+    self._setup_driver()
+  File "collect_naver_cookies.py", line 114, in _setup_driver
+    self.driver = webdriver.Chrome(service=service, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chrome\webdriver.py", line 45, in __init__
+    super().__init__(
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\chromium\webdriver.py", line 66, in __init__
+    super().__init__(command_executor=executor, options=options)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 241, in __init__
+    self.start_session(capabilities)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 329, in start_session
+    response = self.execute(Command.NEW_SESSION, caps)["value"]
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 384, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Failed to create Chrome process.
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7cfc56f65+76917]
+	GetHandleVerifier [0x0x7ff7cfc56fc0+77008]
+	(No symbol) [0x0x7ff7cfa09dea]
+	(No symbol) [0x0x7ff7cfa467a9]
+	(No symbol) [0x0x7ff7cfa42675]
+	(No symbol) [0x0x7ff7cfa95e9e]
+	(No symbol) [0x0x7ff7cfa95630]
+	(No symbol) [0x0x7ff7cfa88243]
+	(No symbol) [0x0x7ff7cfa51431]
+	(No symbol) [0x0x7ff7cfa521c3]
+	GetHandleVerifier [0x0x7ff7cff2d29d+3051437]
+	GetHandleVerifier [0x0x7ff7cff278f3+3028483]
+	GetHandleVerifier [0x0x7ff7cff4588d+3151261]
+	GetHandleVerifier [0x0x7ff7cfc7182e+185662]
+	GetHandleVerifier [0x0x7ff7cfc796ef+218111]
+	GetHandleVerifier [0x0x7ff7cfc5fae4+112628]
+	GetHandleVerifier [0x0x7ff7cfc5fc99+113065]
+	GetHandleVerifier [0x0x7ff7cfc46c68+10616]
+	BaseThreadInitThunk [0x0x7fff559a259d+29]
+	RtlUserThreadStart [0x0x7fff56c8af78+40]
+
+2025-11-27 12:45:31,559 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 12:45:31,559 - __main__ - INFO - ============================================================
+2025-11-27 12:45:31,559 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 12:45:31,559 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 12:45:31,559 - __main__ - INFO - ============================================================
+2025-11-27 12:45:31,559 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 12:45:31,559 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 12:45:31,559 - __main__ - INFO - [드라이버 설정] Chrome 바이너리 경로 지정: C:\Program Files\Google\Chrome\Application\chrome.exe
+2025-11-27 12:45:31,559 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 211.250.94.131:1201)
+2025-11-27 12:45:32,638 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 생성 성공
+2025-11-27 12:45:32,638 - __main__ - INFO - [쿠키 수집] m.naver.com 접속 중...
+2025-11-27 12:45:57,798 - __main__ - INFO - [쿠키 수집] 쿠키 수집 중...
+2025-11-27 12:46:15,101 - __main__ - INFO - [쿠키 수집] 총 1개의 쿠키 수집 완료
+2025-11-27 12:46:15,101 - __main__ - INFO - [파일 저장] 디렉토리 생성: cookies_data
+2025-11-27 12:46:15,101 - __main__ - INFO - [파일 저장] 쿠키 저장 완료: cookies_data\naver_cookies_2025-11-27_12-46-15_proxy-0.json
+2025-11-27 12:46:15,101 - __main__ - INFO - [파일 저장] 총 1개의 쿠키 저장됨
+2025-11-27 12:46:15,101 - __main__ - INFO - ============================================================
+2025-11-27 12:46:15,101 - __main__ - INFO - ✓ 네이버 쿠키 수집 및 저장 완료
+2025-11-27 12:46:15,101 - __main__ - INFO - 저장 위치: cookies_data\naver_cookies_2025-11-27_12-46-15_proxy-0.json
+2025-11-27 12:46:15,111 - __main__ - INFO - ============================================================
+2025-11-27 12:46:17,274 - __main__ - INFO - [드라이버 종료] Chrome 드라이버 종료 완료
+2025-11-27 12:52:32,360 - __main__ - INFO - 기본 모드: 첫 번째 프록시에 대해 쿠키 수집
+2025-11-27 12:52:32,360 - __main__ - INFO - ============================================================
+2025-11-27 12:52:32,360 - __main__ - INFO - 네이버 쿠키 수집 시작
+2025-11-27 12:52:32,360 - __main__ - INFO - 프록시 인덱스: 0
+2025-11-27 12:52:32,361 - __main__ - INFO - ============================================================
+2025-11-27 12:52:32,361 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 설정 시작...
+2025-11-27 12:52:32,361 - __main__ - INFO - [드라이버 설정] ChromeDriver 경로: chrome_138_directory\chromedriver.exe
+2025-11-27 12:52:32,361 - __main__ - INFO - [드라이버 설정] Chrome 바이너리 경로 지정: C:\Program Files\Google\Chrome\Application\chrome.exe
+2025-11-27 12:52:32,361 - __main__ - INFO - [프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: 211.250.94.131:1201)
+2025-11-27 12:52:33,381 - __main__ - INFO - [드라이버 설정] Chrome 드라이버 생성 성공
+2025-11-27 12:52:33,381 - __main__ - INFO - [쿠키 수집] m.naver.com 접속 중...
+2025-11-27 12:53:21,186 - __main__ - INFO - [쿠키 수집] 쿠키 생성 유도를 위한 페이지 상호작용 중...
+2025-11-27 12:53:27,218 - __main__ - INFO - [쿠키 수집] 스크롤 동작 완료
+2025-11-27 12:53:27,219 - __main__ - INFO - [쿠키 수집] 시도 1/5: 3개 쿠키 발견 (중요: 3/9)
+2025-11-27 12:53:30,256 - __main__ - INFO - [쿠키 수집] 시도 2/5: 7개 쿠키 발견 (중요: 7/9)
+2025-11-27 12:53:30,256 - __main__ - INFO - [쿠키 수집] 중요 쿠키 충분히 생성됨: {'SRT30', 'NNB', 'NAC', 'MM_PF', 'BUC', 'NACT', 'SRT5'}
+2025-11-27 12:53:30,272 - __main__ - INFO - [쿠키 수집] 총 7개의 쿠키 수집 완료
+2025-11-27 12:53:30,272 - __main__ - INFO - [쿠키 수집] 중요 쿠키 수집 현황:
+2025-11-27 12:53:30,272 - __main__ - INFO -   ✓ 수집됨 (7개): BUC, MM_PF, NAC, NACT, NNB, SRT30, SRT5
+2025-11-27 12:53:30,272 - __main__ - WARNING -   ✗ 누락됨 (2개): MM_search_homefeed, _naver_usersession_
+2025-11-27 12:53:30,272 - __main__ - INFO - [쿠키 수집] .naver.com: 7개 쿠키
+2025-11-27 12:53:30,281 - __main__ - INFO - [파일 저장] 쿠키 저장 완료: cookies_data\naver_cookies_2025-11-27_12-53-30_proxy-0.json
+2025-11-27 12:53:30,281 - __main__ - INFO - [파일 저장] 총 7개의 쿠키 저장됨
+2025-11-27 12:53:30,281 - __main__ - INFO - ============================================================
+2025-11-27 12:53:30,287 - __main__ - INFO - ✓ 네이버 쿠키 수집 및 저장 완료
+2025-11-27 12:53:30,287 - __main__ - INFO - 저장 위치: cookies_data\naver_cookies_2025-11-27_12-53-30_proxy-0.json
+2025-11-27 12:53:30,287 - __main__ - INFO - ============================================================
+2025-11-27 12:53:32,456 - __main__ - INFO - [드라이버 종료] Chrome 드라이버 종료 완료

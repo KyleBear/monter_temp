@@ -60,14 +60,68 @@ class NaverCrawler:
         # Chrome 옵션 설정
         options = Options()
         
+        # 웹 드라이버 생성
+        # 크롬 138 디렉토리 생성
+        chrome_138_directory = "chrome_138_directory"  # 실제 경로로 변경하세요
+        chromedriver_path = os.path.join(chrome_138_directory, "chromedriver.exe")
+
+        if not os.path.exists(chromedriver_path):
+            logger.error(f"ChromeDriver 파일을 찾을 수 없습니다: {chromedriver_path}")
+            raise FileNotFoundError(f"ChromeDriver 파일을 찾을 수 없습니다: {chromedriver_path}")
+        
+        service = Service(chromedriver_path)  # ← 108번째 줄 수정
+        logger.info(f"[_setup_driver] ChromeDriver 경로: {chromedriver_path}")
+
+        # ⭐ Chrome 138 바이너리 경로 지정 (자동 업데이트 방지)
+        chrome_binary_paths = [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",  # 사용자 지정 경로 (우선)
+            os.path.join(chrome_138_directory, "chrome.exe"),  # 기존 경로
+        ]
+        
+        chrome_binary_path = None
+        for path in chrome_binary_paths:
+            if os.path.exists(path):
+                chrome_binary_path = path
+                options.binary_location = path
+                logger.info(f"[_setup_driver] Chrome 바이너리 경로 지정: {path}")
+                break
+
+        # chrome_138_binary_path = os.path.join(chrome_138_directory, "chrome.exe")
+        # if os.path.exists(chrome_138_binary_path):
+        #     options.binary_location = chrome_138_binary_path
+        #     logger.info(f"[_setup_driver] Chrome 138 바이너리 경로 지정: {chrome_138_binary_path}")
+        # else:
+        #     # Chrome 138 바이너리를 찾을 수 없는 경우
+        #     logger.warning(f"[_setup_driver] ⚠️ Chrome 138 바이너리를 찾을 수 없습니다: {chrome_138_binary_path}")
+        #     logger.warning("[_setup_driver] ⚠️ 시스템의 기본 Chrome(142)을 사용합니다 - 버전 불일치 오류 발생 가능!")
+        #     logger.warning("[_setup_driver] 해결 방법:")
+        #     logger.warning("[_setup_driver]   1. Chrome 138 바이너리를 다운로드하여 chrome_138_directory에 chrome.exe로 저장")
+        #     logger.warning("[_setup_driver]   2. 또는 Chrome 자동 업데이트를 비활성화")
+            
+        #     # 대체 경로 시도 (npx @puppeteer/browsers로 다운로드한 경우 포함)
+        #     possible_paths = [
+        #         os.path.join(chrome_138_directory, "GoogleChromePortable.exe"),
+        #         os.path.join(chrome_138_directory, "chrome-win32", "chrome.exe"),
+        #         os.path.join(chrome_138_directory, "chrome-win64", "chrome.exe"),
+        #         # npx @puppeteer/browsers로 다운로드한 경우의 경로
+        #         os.path.join(chrome_138_directory, "chrome-win64", "chrome-win64", "chrome.exe"),
+        #         os.path.join(chrome_138_directory, "chrome", "chrome.exe"),
+        #     ]
+            
+        #     for alt_path in possible_paths:
+        #         if os.path.exists(alt_path):
+        #             options.binary_location = alt_path
+        #             logger.info(f"[_setup_driver] 대체 Chrome 바이너리 경로 사용: {alt_path}")
+        #             break
+
         # 프록시 설정 (proxy_chain.py를 통해)
         if self.use_proxy:
             options.add_argument('--proxy-server=socks5://127.0.0.1:1080')
             logger.info("[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080")
         
         # 기본 옵션
-        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
-        
+        # options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
+        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36')        
         # 자동화 탐지 제거 옵션 
         # === [자동화 흔적 제거 필수 옵션] ===
         options.add_argument("--disable-blink-features=AutomationControlled")
@@ -104,8 +158,8 @@ class NaverCrawler:
             user_data_dir = tempfile.mkdtemp(prefix='chrome_data_')
             options.add_argument(f'--user-data-dir={user_data_dir}')
         
-        # WebDriver 생성 (재시도 로직 포함)
-        service = Service()
+        # WebDriver 생성 (재시도 로직 포함) chrome_binary_path 사용 대체
+        # service = Service()
         max_retries = 2
         last_error = None
         
@@ -169,7 +223,8 @@ class NaverCrawler:
             logger.info("모바일 모드로 전환 중...")
             # 1,2,3 크롬 토글 Device Toolbar 와 동일.
             # 1. User-Agent를 모바일로 변경
-            mobile_user_agent = "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.175 Mobile Safari/537.36"
+            # mobile_user_agent = "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.175 Mobile Safari/537.36"
+            mobile_user_agent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36"
             self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
                 'userAgent': mobile_user_agent,
                 'acceptLanguage': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -178,22 +233,76 @@ class NaverCrawler:
             logger.info("✓ User-Agent를 모바일로 변경 완료")
             
             # 2. 뷰포트를 모바일로 설정
+            # self.driver.execute_cdp_cmd('Emulation.setDeviceMetricsOverride', {
+            #     'width': 375,
+            #     'height': 667,
+            #     'deviceScaleFactor': 2.0,
+            #     'mobile': True,
+            #     'screenOrientation': {'angle': 0, 'type': 'portraitPrimary'}  # ← 추가
+            # })
+            # logger.info("✓ 뷰포트를 모바일로 설정 완료 (375x667)")
+            
+            # # 3. 터치 이벤트 활성화
+            # self.driver.execute_cdp_cmd('Emulation.setTouchEmulationEnabled', {
+            #     'enabled': True,
+            #     'maxTouchPoints': 5
+            # })
+            # logger.info("✓ 터치 이벤트 활성화 완료")
+            
+            # # 4. ⭐ 중요: Emulation.setEmulatedMedia 설정
+            # self.driver.execute_cdp_cmd('Emulation.setEmulatedMedia', {
+            #     'media': 'screen',
+            #     'features': [
+            #         {'name': 'prefers-color-scheme', 'value': 'light'},
+            #         {'name': 'prefers-reduced-motion', 'value': 'no-preference'}
+            #     ]
+            # })
+            # logger.info("✓ Media 설정 완료")
+            
+            # # 5. ⭐ Client Hints 설정 (최신 Chrome에서 중요!)
+            # self.driver.execute_cdp_cmd('Emulation.setUserAgentOverride', {
+            #     'userAgent': mobile_user_agent,
+            #     'acceptLanguage': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            #     'platform': 'Linux armv8l',
+            #     'userAgentMetadata': {  # ← 이게 핵심!
+            #         'brands': [
+            #             {'brand': 'Chromium', 'version': '142'},
+            #             {'brand': 'Google Chrome', 'version': '142'},
+            #             {'brand': 'Not_A Brand', 'version': '99'}
+            #         ],
+            #         'fullVersionList': [
+            #             {'brand': 'Chromium', 'version': '142.0.7444.175'},
+            #             {'brand': 'Google Chrome', 'version': '142.0.7444.175'},
+            #             {'brand': 'Not_A Brand', 'version': '99.0.0.0'}
+            #         ],
+            #         'fullVersion': '142.0.7444.175',
+            #         'platform': 'Android',
+            #         'platformVersion': '10.0.0',
+            #         'architecture': 'arm',
+            #         'model': 'SM-G973F',
+            #         'mobile': True,
+            #         'bitness': '64'
+            #     }
+            # })
+            # logger.info("✓ Client Hints 설정 완료")
+
+            # 2. 뷰포트를 모바일로 설정
             self.driver.execute_cdp_cmd('Emulation.setDeviceMetricsOverride', {
                 'width': 375,
                 'height': 667,
                 'deviceScaleFactor': 2.0,
                 'mobile': True,
-                'screenOrientation': {'angle': 0, 'type': 'portraitPrimary'}  # ← 추가
+                'screenOrientation': {'angle': 0, 'type': 'portraitPrimary'}
             })
             logger.info("✓ 뷰포트를 모바일로 설정 완료 (375x667)")
-            
+
             # 3. 터치 이벤트 활성화
             self.driver.execute_cdp_cmd('Emulation.setTouchEmulationEnabled', {
                 'enabled': True,
                 'maxTouchPoints': 5
             })
             logger.info("✓ 터치 이벤트 활성화 완료")
-            
+
             # 4. ⭐ 중요: Emulation.setEmulatedMedia 설정
             self.driver.execute_cdp_cmd('Emulation.setEmulatedMedia', {
                 'media': 'screen',
@@ -203,24 +312,24 @@ class NaverCrawler:
                 ]
             })
             logger.info("✓ Media 설정 완료")
-            
-            # 5. ⭐ Client Hints 설정 (최신 Chrome에서 중요!)
+
+            # 5. ⭐ Client Hints 설정 (Chrome 138 버전)
             self.driver.execute_cdp_cmd('Emulation.setUserAgentOverride', {
                 'userAgent': mobile_user_agent,
                 'acceptLanguage': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
                 'platform': 'Linux armv8l',
-                'userAgentMetadata': {  # ← 이게 핵심!
+                'userAgentMetadata': {
                     'brands': [
-                        {'brand': 'Chromium', 'version': '142'},
-                        {'brand': 'Google Chrome', 'version': '142'},
+                        {'brand': 'Chromium', 'version': '138'},
+                        {'brand': 'Google Chrome', 'version': '138'},
                         {'brand': 'Not_A Brand', 'version': '99'}
                     ],
                     'fullVersionList': [
-                        {'brand': 'Chromium', 'version': '142.0.7444.175'},
-                        {'brand': 'Google Chrome', 'version': '142.0.7444.175'},
+                        {'brand': 'Chromium', 'version': '138.0.0.0'},
+                        {'brand': 'Google Chrome', 'version': '138.0.0.0'},
                         {'brand': 'Not_A Brand', 'version': '99.0.0.0'}
                     ],
-                    'fullVersion': '142.0.7444.175',
+                    'fullVersion': '138.0.0.0',
                     'platform': 'Android',
                     'platformVersion': '10.0.0',
                     'architecture': 'arm',
@@ -229,8 +338,8 @@ class NaverCrawler:
                     'bitness': '64'
                 }
             })
-            logger.info("✓ Client Hints 설정 완료")
-            
+            logger.info("✓ Client Hints 설정 완료 (Chrome 138)")       
+            # server _ http user agent 
             # 6. ⭐ Pointer 타입 설정
             self.driver.execute_cdp_cmd('Emulation.setEmitTouchEventsForMouse', {
                 'enabled': True,
@@ -267,6 +376,19 @@ class NaverCrawler:
         except Exception as e:
             logger.error(f"검색어 삭제 실패: {e}")
 
+    def _check_proxy_server(self, host="127.0.0.1", port=1080, timeout=2):
+        """프록시 서버가 실행 중인지 확인"""
+        try:
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(timeout)
+            result = sock.connect_ex((host, port))
+            sock.close()
+            return result == 0
+        except Exception as e:
+            logger.debug(f"[_check_proxy_server] 프록시 서버 확인 중 오류: {e}")
+            return False
+    
     def _cleanup_user_data_lock(self, user_data_dir):
         """user_data_dir의 잠금 파일 정리"""
         try:
