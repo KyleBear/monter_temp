@@ -1,26 +1,36 @@
-2025-11-27 18:47:23,510 - ERROR - proxy_chain.py 실행 중 오류: There is no current event loop in thread 'Thread-1'.
+2025-11-28 19:44:24,017 - ERROR - test_web_selenium.py 프로세스 타임아웃 (3600초)
+2025-11-29 06:02:02,595 - ERROR - test_ip_connect.py 실행 중 오류: set_wakeup_fd only works in main thread
 Traceback (most recent call last):
-  File "scheduler.py", line 233, in run_proxy_chain_async
-    proxy_chain_module.main()
-  File "proxy_config\proxy_chain.py", line 705, in main
-    server = ProxyChainServer(
-  File "proxy_config\proxy_chain.py", line 112, in __init__
-    self.proxy_lock = asyncio.Lock()
-  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\locks.py", line 164, in __init__
-    self._loop = events.get_event_loop()
-  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\events.py", line 639, in get_event_loop
-    raise RuntimeError('There is no current event loop in thread %r.'
-RuntimeError: There is no current event loop in thread 'Thread-1'.
-2025-11-27 18:52:19,546 - ERROR - proxy_chain.py 실행 중 오류: There is no current event loop in thread 'Thread-1'.
+  File "scheduler.py", line 182, in run_test_ip_connect
+    success_proxies = asyncio.run(test_proxies_and_get_success_list())
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\runners.py", line 50, in run
+    loop.close()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\proactor_events.py", line 679, in close
+    signal.set_wakeup_fd(-1)
+ValueError: set_wakeup_fd only works in main thread
+2025-11-29 06:30:00,044 - ERROR - proxy_chain.py 실행 중 오류: set_wakeup_fd only works in main thread
 Traceback (most recent call last):
-  File "scheduler.py", line 233, in run_proxy_chain_async
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\runners.py", line 43, in run
+    return loop.run_until_complete(main)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\base_events.py", line 608, in run_until_complete
+    return future.result()
+  File "proxy_config\proxy_chain.py", line 775, in start
+    self.server = await asyncio.start_server(
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\streams.py", line 94, in start_server
+    return await loop.create_server(factory, host, port, **kwds)
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\base_events.py", line 1448, in create_server
+    raise OSError(err.errno, 'error while attempting '
+OSError: [Errno 10048] error while attempting to bind on address ('127.0.0.1', 1080): 각 소켓 주소(프로토콜/네트워크 주소/포트)는 하나만 사용할 수 있습니다
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "scheduler.py", line 235, in run_proxy_chain_async
     proxy_chain_module.main()
-  File "proxy_config\proxy_chain.py", line 705, in main
-    server = ProxyChainServer(
-  File "proxy_config\proxy_chain.py", line 112, in __init__
-    self.proxy_lock = asyncio.Lock()
-  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\locks.py", line 164, in __init__
-    self._loop = events.get_event_loop()
-  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\events.py", line 639, in get_event_loop
-    raise RuntimeError('There is no current event loop in thread %r.'
-RuntimeError: There is no current event loop in thread 'Thread-1'.
+  File "proxy_config\proxy_chain.py", line 802, in main
+    asyncio.run(server.start())
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\runners.py", line 50, in run
+    loop.close()
+  File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\proactor_events.py", line 679, in close
+    signal.set_wakeup_fd(-1)
+ValueError: set_wakeup_fd only works in main thread

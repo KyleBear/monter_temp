@@ -1,13 +1,13 @@
 {
-  "collection_time": "2025-11-27T19:01:07.930798",
+  "collection_time": "2025-11-29T08:11:26.207546",
   "domain": "m.naver.com",
-  "proxy": "61.84.88.188:1236",
-  "proxy_index": 0,
+  "proxy": "121.142.103.5:1206",
+  "proxy_index": 92,
   "total_cookies": 7,
   "cookies": [
     {
       "domain": ".naver.com",
-      "expiry": 1764238555,
+      "expiry": 1764372374,
       "httpOnly": false,
       "name": "MM_PF",
       "path": "/",
@@ -17,47 +17,47 @@
     },
     {
       "domain": ".naver.com",
-      "expiry": 1798797665,
+      "expiry": 1798931484,
       "httpOnly": true,
       "name": "BUC",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "K3AlV3NcyKiqfpCJNXUKsJX1WSsZc6op_QyjoavBJ7c="
+      "value": "Y9nVC5cjKAH3CeNverv4X8Q0se7P-OPmpjKr25jZ5OE="
     },
     {
       "domain": ".naver.com",
-      "expiry": 1798797665,
+      "expiry": 1798931484,
       "httpOnly": false,
       "name": "NNB",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "VI36CRTDEEUGS"
+      "value": "7RAS72I6FQVGS"
     },
     {
       "domain": ".naver.com",
-      "expiry": 1764237965,
+      "expiry": 1764371784,
       "httpOnly": false,
       "name": "SRT5",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "1764237667"
+      "value": "1764371486"
     },
     {
       "domain": ".naver.com",
-      "expiry": 1764239465,
+      "expiry": 1764373284,
       "httpOnly": false,
       "name": "SRT30",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "1764237667"
+      "value": "1764371486"
     },
     {
       "domain": ".naver.com",
-      "expiry": 1764324065,
+      "expiry": 1764457883,
       "httpOnly": false,
       "name": "NACT",
       "path": "/",
@@ -67,13 +67,13 @@
     },
     {
       "domain": ".naver.com",
-      "expiry": 1798797665,
+      "expiry": 1798931483,
       "httpOnly": false,
       "name": "NAC",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "8Z1AB4gAwZHF"
+      "value": "eHNPCwBFUzr8A"
     }
   ]
 }

@@ -237,4 +237,6 @@ GoogleUpdate.exe 파일명 변경
 파일 탐색기를 열고 다음 경로로 이동합니다: C:\Program Files (x86)\Google\Update.
 GoogleUpdate.exe 파일을 찾아 이름을 GoogleUpdate1.exe와 같이 변경
 Googleupdate2 로 바꿈.
+https://khc-developer.tistory.com/181
+
 ####

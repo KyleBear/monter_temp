@@ -1,0 +1,79 @@
+{
+  "collection_time": "2025-11-29T07:52:58.325050",
+  "domain": "m.naver.com",
+  "proxy": "211.198.151.237:1234",
+  "proxy_index": 75,
+  "total_cookies": 7,
+  "cookies": [
+    {
+      "domain": ".naver.com",
+      "expiry": 1764371266,
+      "httpOnly": false,
+      "name": "MM_PF",
+      "path": "/",
+      "sameSite": "Lax",
+      "secure": false,
+      "value": "SEARCH"
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1798930376,
+      "httpOnly": true,
+      "name": "BUC",
+      "path": "/",
+      "sameSite": "None",
+      "secure": true,
+      "value": "am1675hWZyItrI1GNQ5qV7PHh1meJ9ycaSGzMJRJai8="
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1798930376,
+      "httpOnly": false,
+      "name": "NNB",
+      "path": "/",
+      "sameSite": "None",
+      "secure": true,
+      "value": "B3B7CAOKE4VGS"
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1764370676,
+      "httpOnly": false,
+      "name": "SRT5",
+      "path": "/",
+      "sameSite": "None",
+      "secure": true,
+      "value": "1764370378"
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1764372176,
+      "httpOnly": false,
+      "name": "SRT30",
+      "path": "/",
+      "sameSite": "None",
+      "secure": true,
+      "value": "1764370378"
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1764456776,
+      "httpOnly": false,
+      "name": "NACT",
+      "path": "/",
+      "sameSite": "Lax",
+      "secure": false,
+      "value": "1"
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1798930376,
+      "httpOnly": false,
+      "name": "NAC",
+      "path": "/",
+      "sameSite": "None",
+      "secure": true,
+      "value": "th6xB4gCZhX2"
+    }
+  ]
+}

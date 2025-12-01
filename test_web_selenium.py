@@ -86,34 +86,6 @@ class NaverCrawler:
                 logger.info(f"[_setup_driver] Chrome 바이너리 경로 지정: {path}")
                 break
 
-        # chrome_138_binary_path = os.path.join(chrome_138_directory, "chrome.exe")
-        # if os.path.exists(chrome_138_binary_path):
-        #     options.binary_location = chrome_138_binary_path
-        #     logger.info(f"[_setup_driver] Chrome 138 바이너리 경로 지정: {chrome_138_binary_path}")
-        # else:
-        #     # Chrome 138 바이너리를 찾을 수 없는 경우
-        #     logger.warning(f"[_setup_driver] ⚠️ Chrome 138 바이너리를 찾을 수 없습니다: {chrome_138_binary_path}")
-        #     logger.warning("[_setup_driver] ⚠️ 시스템의 기본 Chrome(142)을 사용합니다 - 버전 불일치 오류 발생 가능!")
-        #     logger.warning("[_setup_driver] 해결 방법:")
-        #     logger.warning("[_setup_driver]   1. Chrome 138 바이너리를 다운로드하여 chrome_138_directory에 chrome.exe로 저장")
-        #     logger.warning("[_setup_driver]   2. 또는 Chrome 자동 업데이트를 비활성화")
-            
-        #     # 대체 경로 시도 (npx @puppeteer/browsers로 다운로드한 경우 포함)
-        #     possible_paths = [
-        #         os.path.join(chrome_138_directory, "GoogleChromePortable.exe"),
-        #         os.path.join(chrome_138_directory, "chrome-win32", "chrome.exe"),
-        #         os.path.join(chrome_138_directory, "chrome-win64", "chrome.exe"),
-        #         # npx @puppeteer/browsers로 다운로드한 경우의 경로
-        #         os.path.join(chrome_138_directory, "chrome-win64", "chrome-win64", "chrome.exe"),
-        #         os.path.join(chrome_138_directory, "chrome", "chrome.exe"),
-        #     ]
-            
-        #     for alt_path in possible_paths:
-        #         if os.path.exists(alt_path):
-        #             options.binary_location = alt_path
-        #             logger.info(f"[_setup_driver] 대체 Chrome 바이너리 경로 사용: {alt_path}")
-        #             break
-
         # 프록시 설정 (proxy_chain.py를 통해)
         if self.use_proxy:
             options.add_argument('--proxy-server=socks5://127.0.0.1:1080')
@@ -1393,7 +1365,8 @@ def main():
     try:
         results = []
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = []
+            # futures를 딕셔너리로 관리 (future -> iteration_id 매핑)
+            futures_dict = {}
             
             # 모든 작업을 스레드 풀에 제출 (0.5초 딜레이로)
             for idx, row in df.iterrows():
@@ -1405,14 +1378,16 @@ def main():
                 
                 logger.info(f"[작업 제출] 반복 {iteration_id}/{len(df)} 작업 제출 중...")
                 future = executor.submit(test_single_iteration, row, iteration_id, False)
-                futures.append((future, iteration_id))
+                futures_dict[future] = iteration_id
             
-            logger.info(f"[병렬 실행] 총 {len(futures)}개 작업이 {max_workers}개 스레드로 병렬 실행됩니다")
+            logger.info(f"[병렬 실행] 총 {len(futures_dict)}개 작업이 {max_workers}개 스레드로 병렬 실행됩니다")
             
-            # 완료된 작업 결과 수집
-            for future, iteration_id in futures:
+            # 완료된 작업부터 처리 (as_completed 사용 - 스레드 순환 가능)
+            for future in as_completed(futures_dict):
+                iteration_id = futures_dict[future]
                 try:
-                    success = future.result(timeout=300)  # 최대 5분 타임아웃
+                    # as_completed는 완료된 작업만 반환하므로 타임아웃 없이 즉시 결과 반환
+                    success = future.result()
                     results.append({
                         'success': success,
                         'iteration_id': iteration_id

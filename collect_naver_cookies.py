@@ -11,7 +11,6 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from proxy_config.proxy_chain import WHITELIST_PROXIES
 
 # 로깅 설정
 logging.basicConfig(
@@ -25,18 +24,49 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def load_whitelist_proxies_from_json():
+    """
+    whitelist_proxies.json 파일에서 프록시 목록 로드
+    
+    Returns:
+        list: 프록시 목록 [{"host": "...", "port": ...}, ...]
+    """
+    try:
+        whitelist_file = os.path.join("proxy_config", "whitelist_proxies.json")
+        
+        if not os.path.exists(whitelist_file):
+            logger.warning(f"whitelist_proxies.json 파일이 없습니다: {whitelist_file}")
+            return []
+        
+        with open(whitelist_file, 'r', encoding='utf-8') as f:
+            proxies = json.load(f)
+        
+        logger.info(f"✓ whitelist_proxies.json에서 {len(proxies)}개 프록시 로드")
+        return proxies
+        
+    except Exception as e:
+        logger.error(f"whitelist_proxies.json 파일 로드 실패: {e}", exc_info=True)
+        return []
+
+
 class NaverCookieCollector:
     """네이버 쿠키 수집 클래스 (순수 수집만 담당)"""
     
-    def __init__(self, use_proxy=True, proxy_index=None):
+    def __init__(self, proxy_index=None, whitelist_proxies=None):
         """
         Args:
-            use_proxy: 프록시 사용 여부 (기본값: True)
             proxy_index: 프록시 인덱스 (선택사항)
+            whitelist_proxies: 프록시 목록 (선택사항, None이면 JSON 파일에서 로드)
         """
         self.driver = None
-        self.use_proxy = use_proxy
         self.proxy_index = proxy_index
+        
+        # ⭐ whitelist_proxies 로드
+        if whitelist_proxies is None:
+            self.whitelist_proxies = load_whitelist_proxies_from_json()
+        else:
+            self.whitelist_proxies = whitelist_proxies
+        
         self.current_proxy = None
         self._setup_driver()
     
@@ -78,16 +108,15 @@ class NaverCookieCollector:
             logger.warning(f"[드라이버 설정] Chrome 바이너리를 찾을 수 없습니다: {chrome_binary_path}")
             raise FileNotFoundError(f"Chrome 바이너리를 찾을 수 없습니다: {chrome_binary_path}")
         
-        # 프록시 설정 (proxy_chain.py를 통해)
-        if self.use_proxy:
-            options.add_argument('--proxy-server=socks5://127.0.0.1:1080')
-            # 현재 사용 중인 프록시 정보 로깅
-            if self.proxy_index is not None and self.proxy_index < len(WHITELIST_PROXIES):
-                proxy = WHITELIST_PROXIES[self.proxy_index]
-                self.current_proxy = f"{proxy['host']}:{proxy['port']}"
-                logger.info(f"[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: {self.current_proxy})")
-            else:
-                logger.info("[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080")
+        # 프록시 설정 (proxy_chain.py를 통해, 스케줄러에서 이미 프록시 사용 중)
+        options.add_argument('--proxy-server=socks5://127.0.0.1:1080')
+        # 현재 사용 중인 프록시 정보 로깅
+        if self.proxy_index is not None and self.whitelist_proxies and self.proxy_index < len(self.whitelist_proxies):
+            proxy = self.whitelist_proxies[self.proxy_index]
+            self.current_proxy = f"{proxy['host']}:{proxy['port']}"
+            logger.info(f"[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080 (원격: {self.current_proxy})")
+        else:
+            logger.info("[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080")
         
         # 기본 옵션
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36')
@@ -248,10 +277,14 @@ class NaverCookieCollector:
             str: 저장된 파일 경로
         """
         try:
-            # 출력 디렉토리 생성
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
-                logger.info(f"[파일 저장] 디렉토리 생성: {output_dir}")
+            # ⭐ 오늘 날짜별 디렉토리 생성
+            today = datetime.now().strftime("%Y-%m-%d")
+            date_dir = os.path.join(output_dir, today)
+            
+            # 날짜별 디렉토리 생성
+            if not os.path.exists(date_dir):
+                os.makedirs(date_dir)
+                logger.info(f"[파일 저장] 날짜별 디렉토리 생성: {date_dir}")
             
             # 파일명: naver_cookies_YYYY-MM-DD_HH-MM-SS_proxy-{index}.json
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -259,7 +292,7 @@ class NaverCookieCollector:
                 filename = f"naver_cookies_{timestamp}_proxy-{proxy_info}.json"
             else:
                 filename = f"naver_cookies_{timestamp}.json"
-            filepath = os.path.join(output_dir, filename)
+            filepath = os.path.join(date_dir, filename)
             
             # 쿠키 데이터 구조화 (NNB 교체 없이)
             cookie_data = {
@@ -313,8 +346,14 @@ def collect_naver_cookies(proxy_index=None):
             logger.info(f"프록시 인덱스: {proxy_index}")
         logger.info("=" * 60)
         
+        # ⭐ whitelist_proxies.json에서 프록시 목록 로드
+        whitelist_proxies = load_whitelist_proxies_from_json()
+        if not whitelist_proxies:
+            logger.error("프록시 목록을 로드할 수 없습니다")
+            return False
+        
         # 쿠키 수집기 생성
-        collector = NaverCookieCollector(use_proxy=True, proxy_index=proxy_index)
+        collector = NaverCookieCollector(proxy_index=proxy_index, whitelist_proxies=whitelist_proxies)
         
         # 쿠키 수집
         cookies = collector.collect_cookies()
@@ -353,12 +392,19 @@ def collect_cookies_for_all_proxies():
     """
     logger.info("=" * 60)
     logger.info("모든 프록시에 대한 쿠키 수집 시작")
-    logger.info(f"총 {len(WHITELIST_PROXIES)}개의 프록시")
+    
+    # ⭐ whitelist_proxies.json에서 프록시 목록 로드
+    whitelist_proxies = load_whitelist_proxies_from_json()
+    if not whitelist_proxies:
+        logger.error("프록시 목록을 로드할 수 없습니다")
+        return []
+    
+    logger.info(f"총 {len(whitelist_proxies)}개의 프록시")
     logger.info("=" * 60)
     
     results = []
-    for i, proxy in enumerate(WHITELIST_PROXIES):
-        logger.info(f"\n[{i+1}/{len(WHITELIST_PROXIES)}] 프록시 {i}: {proxy['host']}:{proxy['port']}")
+    for i, proxy in enumerate(whitelist_proxies):
+        logger.info(f"\n[{i+1}/{len(whitelist_proxies)}] 프록시 {i}: {proxy['host']}:{proxy['port']}")
         success = collect_naver_cookies(proxy_index=i)
         results.append({
             'proxy_index': i,
@@ -367,7 +413,7 @@ def collect_cookies_for_all_proxies():
         })
         
         # 다음 프록시로 넘어가기 전 대기
-        if i < len(WHITELIST_PROXIES) - 1:
+        if i < len(whitelist_proxies) - 1:
             time.sleep(5)  # 5초 대기
     
     # 결과 요약

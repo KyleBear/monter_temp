@@ -36,7 +36,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-
+# 웹 브라우저용 코드
 
 class NaverCrawler:
     """일반 셀레니움 네이버 크롤러 (로컬 Chrome)"""

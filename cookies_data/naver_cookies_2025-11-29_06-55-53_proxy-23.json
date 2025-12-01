@@ -1,33 +1,13 @@
 {
-  "collection_time": "2025-11-27T12:53:30.272336",
+  "collection_time": "2025-11-29T06:55:53.962967",
   "domain": "m.naver.com",
-  "proxy": "211.250.94.131:1201",
-  "proxy_index": 0,
+  "proxy": "125.136.111.7:1201",
+  "proxy_index": 23,
   "total_cookies": 7,
   "cookies": [
     {
       "domain": ".naver.com",
-      "expiry": 1764302007,
-      "httpOnly": false,
-      "name": "NACT",
-      "path": "/",
-      "sameSite": "Lax",
-      "secure": false,
-      "value": "1"
-    },
-    {
-      "domain": ".naver.com",
-      "expiry": 1798775607,
-      "httpOnly": false,
-      "name": "NAC",
-      "path": "/",
-      "sameSite": "None",
-      "secure": true,
-      "value": "zSKwB4QAf47LA"
-    },
-    {
-      "domain": ".naver.com",
-      "expiry": 1764216498,
+      "expiry": 1764367841,
       "httpOnly": false,
       "name": "MM_PF",
       "path": "/",
@@ -37,43 +17,63 @@
     },
     {
       "domain": ".naver.com",
-      "expiry": 1798775608,
+      "expiry": 1798926952,
       "httpOnly": true,
       "name": "BUC",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "dxo1Cdzx8pIFuFITqPwc0fYB4BcsA9cB0BovPUy70jU="
+      "value": "CY6EEOsWZdmLx6OtEc7gUNVYkdp3XJdhUTTTYY8UJ7k="
     },
     {
       "domain": ".naver.com",
-      "expiry": 1798775608,
+      "expiry": 1798926952,
       "httpOnly": false,
       "name": "NNB",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "XNXATNZZZMTWS"
+      "value": "RQW7RPTJDIVGS"
     },
     {
       "domain": ".naver.com",
-      "expiry": 1764215908,
+      "expiry": 1764367252,
       "httpOnly": false,
       "name": "SRT5",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "1764215609"
+      "value": "1764366953"
     },
     {
       "domain": ".naver.com",
-      "expiry": 1764217408,
+      "expiry": 1764368752,
       "httpOnly": false,
       "name": "SRT30",
       "path": "/",
       "sameSite": "None",
       "secure": true,
-      "value": "1764215609"
+      "value": "1764366953"
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1764453351,
+      "httpOnly": false,
+      "name": "NACT",
+      "path": "/",
+      "sameSite": "Lax",
+      "secure": false,
+      "value": "1"
+    },
+    {
+      "domain": ".naver.com",
+      "expiry": 1798926951,
+      "httpOnly": false,
+      "name": "NAC",
+      "path": "/",
+      "sameSite": "None",
+      "secure": true,
+      "value": "f5fDGgDKUCOcA"
     }
   ]
 }

@@ -307,6 +307,45 @@ def run_collect_naver_cookies():
         log_error(f"collect_naver_cookies.py 실행 실패: {e}", exc_info=True)
         logger.error(f"collect_naver_cookies.py 실행 실패: {e}", exc_info=True)
 
+
+def run_collect_naver_cookies_all():
+    """collect_naver_cookies.py 실행 (모든 프록시에 대해)"""
+    logger.info("=" * 60)
+    logger.info("collect_naver_cookies.py 실행 시작 (모든 프록시)")
+    logger.info("=" * 60)
+    
+    try:
+        script_path = "collect_naver_cookies.py"
+        if not os.path.exists(script_path):
+            logger.error("collect_naver_cookies.py 파일을 찾을 수 없습니다")
+            log_error("collect_naver_cookies.py 파일을 찾을 수 없습니다")
+            return
+        
+        # ⭐ --all 인자 추가하여 모든 프록시에 대해 수집
+        result = subprocess.run(
+            [sys.executable, script_path, "--all"],  # --all 인자 추가
+            capture_output=True,
+            text=True,
+            timeout=7200  # 2시간 타임아웃 (프록시가 많을 수 있으므로)
+        )
+        
+        logger.info(f"collect_naver_cookies.py 실행 완료 (반환 코드: {result.returncode})")
+        if result.stdout:
+            logger.info(f"출력:\n{result.stdout}")
+        if result.stderr:
+            logger.warning(f"오류:\n{result.stderr}")
+            if result.returncode != 0:
+                log_error(f"collect_naver_cookies.py 실행 오류:\n{result.stderr}")
+            
+    except subprocess.TimeoutExpired:
+        error_msg = "collect_naver_cookies.py 실행 타임아웃"
+        log_error(error_msg)
+        logger.error(error_msg)
+    except Exception as e:
+        log_error(f"collect_naver_cookies.py 실행 실패: {e}", exc_info=True)
+        logger.error(f"collect_naver_cookies.py 실행 실패: {e}", exc_info=True)
+
+
 def run_test_web_selenium():
     """test_web_selenium.py 실행"""
     logger.info("=" * 60)
@@ -447,6 +486,42 @@ def run_collect_cookies_with_proxy(keep_proxy_alive=False):
     else:
         logger.info("✓ proxy_chain.py 유지 (다음 작업을 위해 계속 실행)")
 
+
+def run_collect_cookies_with_proxy_all(keep_proxy_alive=False):
+    """proxy_chain.py 시작 후 collect_naver_cookies.py 실행 (모든 프록시에 대해)"""
+    global proxy_chain_process, proxy_chain_thread
+    
+    logger.info("=" * 60)
+    logger.info("프록시 체인 시작 및 쿠키 수집 작업 시작 (모든 프록시)")
+    logger.info("=" * 60)
+    
+    # 1. proxy_chain.py 시작
+    if not run_proxy_chain():
+        error_msg = "proxy_chain.py 시작 실패, 쿠키 수집 작업 중단"
+        log_error(error_msg)
+        logger.error(error_msg)
+        return
+    
+    # 2. 프록시 서버 시작 대기
+    time.sleep(5)
+    
+    # 3. collect_naver_cookies.py 실행 (모든 프록시에 대해)
+    run_collect_naver_cookies_all()
+    
+    # 4. proxy_chain.py 종료 (keep_proxy_alive=True이면 종료하지 않음)
+    if not keep_proxy_alive:
+        if proxy_chain_process:
+            logger.info("proxy_chain.py 종료 중...")
+            proxy_chain_process.terminate()
+            try:
+                proxy_chain_process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proxy_chain_process.kill()
+            logger.info("proxy_chain.py 종료 완료")
+    else:
+        logger.info("✓ proxy_chain.py 유지 (다음 작업을 위해 계속 실행)")
+
+
 def run_test_web_selenium_with_proxy():
     """proxy_chain.py 시작 후 test_web_selenium.py 실행 및 종료 대기"""
     global proxy_chain_process, proxy_chain_thread
@@ -564,18 +639,18 @@ def main():
         replace_existing=True
     )
     
-    # 매일 6시 30분에 proxy_chain.py 시작 후 collect_naver_cookies.py 실행
+    # 매일 6시 30분에 proxy_chain.py 시작 후 collect_naver_cookies.py 실행 (모든 프록시에 대해)
     scheduler.add_job(
-        run_collect_cookies_with_proxy,
+        run_collect_cookies_with_proxy_all,
         trigger=CronTrigger(hour=6, minute=30),
         id='collect_cookies',
-        name='쿠키 수집',
+        name='쿠키 수집 (모든 프록시)',
         replace_existing=True
     )
     
     logger.info("등록된 스케줄:")
     logger.info("  - 매일 06:00: test_ip_connect.py 실행 → 성공한 프록시만 WHITELIST_PROXIES에 추가")
-    logger.info("  - 매일 06:30: proxy_chain.py 시작 → collect_naver_cookies.py 실행")
+    logger.info("  - 매일 06:30: proxy_chain.py 시작 → collect_naver_cookies.py 실행 (모든 프록시에 대해)")
     logger.info("=" * 60)
     
     try:
@@ -589,7 +664,8 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='스케줄러 실행')
     parser.add_argument('--test-now', action='store_true', help='프록시 테스트를 즉시 실행')
-    parser.add_argument('--collect-now', action='store_true', help='쿠키 수집을 즉시 실행')
+    parser.add_argument('--collect-now', action='store_true', help='쿠키 수집을 즉시 실행 (첫 번째 프록시만)')
+    parser.add_argument('--collect-all-now', action='store_true', help='모든 프록시에 대해 쿠키 수집을 즉시 실행')
     parser.add_argument('--all-now', action='store_true', help='모든 작업을 즉시 실행 (테스트 → 쿠키 수집)')
     
     args = parser.parse_args()
@@ -604,20 +680,26 @@ if __name__ == '__main__':
             logger.info("프록시 테스트 완료")
         elif args.collect_now:
             logger.info("=" * 60)
-            logger.info("즉시 실행: 쿠키 수집")
+            logger.info("즉시 실행: 쿠키 수집 (첫 번째 프록시만)")
             logger.info("=" * 60)
             run_collect_cookies_with_proxy()
             logger.info("쿠키 수집 완료")
+        elif args.collect_all_now:
+            logger.info("=" * 60)
+            logger.info("즉시 실행: 모든 프록시에 대해 쿠키 수집")
+            logger.info("=" * 60)
+            run_collect_cookies_with_proxy_all()
+            logger.info("모든 프록시 쿠키 수집 완료")
         elif args.all_now:
             logger.info("=" * 60)
-            logger.info("즉시 실행: 모든 작업 (테스트 → 쿠키 수집 → test_web_selenium)")
-            logger.info("=" * 60)
-            # 1. 프록시 테스트
-            run_test_ip_connect()
-            time.sleep(5)  # 5초 대기
-            # 2. 쿠키 수집 (프록시 유지)
-            run_collect_cookies_with_proxy(keep_proxy_alive=True)
-            time.sleep(5)  # 5초 대기
+            # logger.info("즉시 실행: 모든 작업 (테스트 → 쿠키 수집 → test_web_selenium)")
+            # logger.info("=" * 60)
+            # # 1. 프록시 테스트
+            # run_test_ip_connect()
+            # time.sleep(5)  # 5초 대기
+            # # 2. 쿠키 수집 (프록시 유지)
+            # run_collect_cookies_with_proxy(keep_proxy_alive=True)
+            # time.sleep(5)  # 5초 대기
             # 3. test_web_selenium.py 실행 (프록시는 이미 실행 중)
             run_test_web_selenium_with_proxy()
             logger.info("모든 작업 완료")
