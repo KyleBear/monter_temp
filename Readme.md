@@ -240,3 +240,10 @@ Googleupdate2 로 바꿈.
 https://khc-developer.tistory.com/181
 
 ####
+
+###2025/12/05###
+가중치가 높은 큐 를 만들기
+mysql 서버 만들기
+상품에 가격 추가
+상품 csv 분할 프로세스 (ip) 당 7개로
+admin 시스템 화면 (DB 와 상호작용 하는 화면 만들기)

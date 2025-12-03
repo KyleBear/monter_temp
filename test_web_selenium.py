@@ -34,17 +34,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# TODO 프로세스 간 CSV 분할	❌ 모든 프로세스가 전체 CSV 처리 나중에 타수와 상호작용 필요.
+# TODO 프로세스 IP 변경	❌ IP 변경 없음, 프록시만 순차 할당
 
+# 프록시 포트 설정 (프로세스별)
+# 상품 7개 스캔하여 bulk 할당 + 슬롯 유효타수 and 가중치 확인 +  
+PROXY_PORTS = [1080, 1081, 1082]  # 프로세스 1→1080, 프로세스 2→1081, 프로세스 3→1082
 
 
 class NaverCrawler:
     """일반 셀레니움 네이버 크롤러 (로컬 Chrome)"""
     
-    def __init__(self, instance_id=None, headless=False, use_proxy=True):
-        logger.info(f"[NaverCrawler] 초기화 시작 (인스턴스 ID: {instance_id})")
+    def __init__(self, instance_id=None, headless=False, use_proxy=True, proxy_port=1080):
+        logger.info(f"[NaverCrawler] 초기화 시작 (인스턴스 ID: {instance_id}, 프록시 포트: {proxy_port})")
         self.driver = None
         self.instance_id = instance_id
         self.use_proxy = use_proxy
+        self.proxy_port = proxy_port
         self.user_data_dir = None  # user_data_dir 저장용 변수
         try:
             self._setup_driver(headless)
@@ -88,8 +94,8 @@ class NaverCrawler:
 
         # 프록시 설정 (proxy_chain.py를 통해)
         if self.use_proxy:
-            options.add_argument('--proxy-server=socks5://127.0.0.1:1080')
-            logger.info("[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080")
+            options.add_argument(f'--proxy-server=socks5://127.0.0.1:{self.proxy_port}')
+            logger.info(f"[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:{self.proxy_port}")
         
         # 기본 옵션
 
@@ -296,7 +302,9 @@ class NaverCrawler:
         except Exception as e:
             logger.error(f"검색어 삭제 실패: {e}")
 
-    def _check_proxy_server(self, host="127.0.0.1", port=1080, timeout=2):
+    def _check_proxy_server(self, host="127.0.0.1", port=None, timeout=2):
+        if port is None:
+            port = self.proxy_port if hasattr(self, 'proxy_port') else 1080
         """프록시 서버가 실행 중인지 확인"""
         try:
             import socket
@@ -816,7 +824,16 @@ class NaverCrawler:
             
             logger.info(f"[세션 정리 {self.instance_id}] 인스턴스 {self.instance_id}의 세션 정리 시작")
             
-            # 1. user_data_dir 정리
+            # 1. 쿠키 정리 (드라이버가 살아있을 때만 - close()에서 이미 처리했지만 안전장치)
+            if self.driver:
+                try:
+                    self.driver.get("about:blank")
+                    self.driver.delete_all_cookies()
+                    logger.debug(f"[세션 정리 {self.instance_id}] ✓ 쿠키 삭제 완료 (안전장치)")
+                except Exception as e:
+                    logger.debug(f"[세션 정리 {self.instance_id}] 쿠키 정리 건너뜀 (드라이버 종료됨): {e}")
+            
+            # 2. user_data_dir 정리
             if self.user_data_dir and os.path.exists(self.user_data_dir):
                 try:
                     # 잠금 파일 먼저 삭제
@@ -837,6 +854,15 @@ class NaverCrawler:
         """드라이버 종료 및 세션 정리"""
         if self.driver:
             try:
+                # 쿠키 정리 (quit 전에)
+                try:
+                    # 빈 페이지로 이동하여 쿠키 정리 가능하도록 함
+                    self.driver.get("about:blank")
+                    self.driver.delete_all_cookies()
+                    logger.info(f"[세션 정리 {self.instance_id if hasattr(self, 'instance_id') else ''}] ✓ 쿠키 삭제 완료")
+                except Exception as e:
+                    logger.warning(f"[세션 정리 {self.instance_id if hasattr(self, 'instance_id') else ''}] 쿠키 삭제 중 오류: {e}")
+                
                 self.driver.quit()
             except:
                 pass
@@ -1399,7 +1425,7 @@ def cleanup_all_chrome_sessions():
         logger.error(f"세션 정리 중 오류: {e}", exc_info=True)
 
 
-def test_single_iteration(row_data, iteration_id, headless=False):
+def test_single_iteration(row_data, iteration_id, headless=False, proxy_port=1080):
     """
     단일 반복 테스트 함수
     
@@ -1407,6 +1433,7 @@ def test_single_iteration(row_data, iteration_id, headless=False):
         row_data: CSV 행 데이터 (pandas Series)
         iteration_id: 반복 ID
         headless: Headless 모드 사용 여부
+        proxy_port: 프록시 포트 (기본값: 1080)
     
     Returns:
         bool: 성공 여부
@@ -1415,13 +1442,13 @@ def test_single_iteration(row_data, iteration_id, headless=False):
     
     try:
         logger.info(f"[반복 {iteration_id}] ========================================")
-        logger.info(f"[반복 {iteration_id}] 크롤러 생성 시작")
+        logger.info(f"[반복 {iteration_id}] 크롤러 생성 시작 (프록시 포트: {proxy_port})")
         
         # 🔑 모바일 모드 전환 (nv_mid 클릭 전에 추가)
 
         # 크롤러 생성
         try:
-            crawler = NaverCrawler(instance_id=iteration_id, headless=headless)
+            crawler = NaverCrawler(instance_id=iteration_id, headless=headless, proxy_port=proxy_port)
             logger.info(f"[반복 {iteration_id}] ✓ 크롤러 생성 완료")
         except Exception as e:
             logger.error(f"[반복 {iteration_id}] ✗ 크롤러 생성 실패: {e}", exc_info=True)
@@ -1488,6 +1515,14 @@ def main(process_id=None, run_id=None):
     start_time = datetime.now()
     start_time_str = start_time.strftime("%Y-%m-%d %H:%M:%S")
     
+    # process_id에 따라 프록시 포트 선택
+    if process_id is not None:
+        proxy_port = PROXY_PORTS[process_id - 1] if process_id <= len(PROXY_PORTS) else PROXY_PORTS[0]
+        logger.info(f"[프로세스 {process_id}] 프록시 포트: {proxy_port}")
+    else:
+        proxy_port = PROXY_PORTS[0]  # 기본값
+        logger.info(f"[프로세스 없음] 기본 프록시 포트: {proxy_port}")
+    
     # change_ip()
     time.sleep(4)
     # CSV 파일 경로
@@ -1514,7 +1549,7 @@ def main(process_id=None, run_id=None):
         return
     
     # 병렬 크롤링 실행 (2초 딜레이로 여러 Chrome 인스턴스 동시 생성)
-    max_workers = 6  # 동시 실행할 최대 작업 수 (필요에 따라 조정) 5-> 6개로 늘림. 각 프로세스당 6개의 크롬 인스턴스 생성
+    max_workers = 5  # 동시 실행할 최대 작업 수 (필요에 따라 조정) 5-> 6개로 늘림. 각 프로세스당 6개의 크롬 인스턴스 생성
     
     try:
         results = []
@@ -1533,7 +1568,7 @@ def main(process_id=None, run_id=None):
                 if idx > 0:
                     time.sleep(2)               
                 logger.info(f"[작업 제출] 반복 {iteration_id}/{len(df)} 작업 제출 크롬 인스턴스 생성중...")
-                future = executor.submit(test_single_iteration, row, iteration_id, False)
+                future = executor.submit(test_single_iteration, row, iteration_id, False, proxy_port)
                 futures_dict[future] = iteration_id
             
             logger.info(f"[병렬 실행] 총 {len(futures_dict)}개 작업이 {max_workers}개 스레드로 병렬 실행됩니다")
@@ -1609,6 +1644,8 @@ def run_main_process(start_run, end_run, process_id):
     """각 프로세스에서 실행할 함수"""
     logger.info(f"[프로세스 {process_id}] 실행 범위: {start_run + 1} ~ {end_run}")
     
+    execution_log = []
+
     process_start_time = datetime.now()
     first_run_start_time = None
     last_run_end_time = None
