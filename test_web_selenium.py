@@ -4,6 +4,7 @@
 import time
 import logging
 import random
+import json
 import pandas as pd
 import os
 import subprocess
@@ -22,8 +23,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.alert import Alert
 from selenium import webdriver
 from test5 import create_click_result_script
-from test6 import DataConnectionManager
-from adb_manager import get_adb_manager
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing
@@ -46,6 +45,7 @@ class NaverCrawler:
         self.driver = None
         self.instance_id = instance_id
         self.use_proxy = use_proxy
+        self.user_data_dir = None  # user_data_dir 저장용 변수
         try:
             self._setup_driver(headless)
             logger.info(f"[NaverCrawler] 초기화 완료 (인스턴스 ID: {instance_id})")
@@ -92,7 +92,7 @@ class NaverCrawler:
             logger.info("[프록시] proxy_chain을 통한 프록시 설정: socks5://127.0.0.1:1080")
         
         # 기본 옵션
-        # options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
+
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36')        
         # 자동화 탐지 제거 옵션 
         # === [자동화 흔적 제거 필수 옵션] ===
@@ -117,11 +117,12 @@ class NaverCrawler:
         # 각 인스턴스별 독립적인 사용자 데이터
         user_data_dir = None
         if self.instance_id:
-            # 절대 경로로 변환하여 잠금 문제 방지
-            # 크롬 캐시 파일 저장
-            # user_data_dir = os.path.abspath(f"chrome_data_{self.instance_id}")
-            # options.add_argument(f'--user-data-dir={user_data_dir}')
-            
+            # instance_id 기반으로 디렉토리 생성
+            user_data_dir = os.path.join(os.getcwd(), f'chrome_data_{self.instance_id}')
+            if not os.path.exists(user_data_dir):
+                os.makedirs(user_data_dir, exist_ok=True)
+            options.add_argument(f'--user-data-dir={user_data_dir}')
+            self.user_data_dir = user_data_dir  # 저장
             # 이전 세션 잠금 파일 정리 시도
             self._cleanup_user_data_lock(user_data_dir)
         else:
@@ -129,10 +130,11 @@ class NaverCrawler:
             import tempfile
             user_data_dir = tempfile.mkdtemp(prefix='chrome_data_')
             options.add_argument(f'--user-data-dir={user_data_dir}')
+            self.user_data_dir = user_data_dir  # 저장
         
         # WebDriver 생성 (재시도 로직 포함) chrome_binary_path 사용 대체
         # service = Service()
-        max_retries = 2
+        max_retries = 3
         last_error = None
         
         for attempt in range(max_retries):
@@ -203,60 +205,6 @@ class NaverCrawler:
                 'platform': 'Linux armv8l'
             })
             logger.info("✓ User-Agent를 모바일로 변경 완료")
-            
-            # 2. 뷰포트를 모바일로 설정
-            # self.driver.execute_cdp_cmd('Emulation.setDeviceMetricsOverride', {
-            #     'width': 375,
-            #     'height': 667,
-            #     'deviceScaleFactor': 2.0,
-            #     'mobile': True,
-            #     'screenOrientation': {'angle': 0, 'type': 'portraitPrimary'}  # ← 추가
-            # })
-            # logger.info("✓ 뷰포트를 모바일로 설정 완료 (375x667)")
-            
-            # # 3. 터치 이벤트 활성화
-            # self.driver.execute_cdp_cmd('Emulation.setTouchEmulationEnabled', {
-            #     'enabled': True,
-            #     'maxTouchPoints': 5
-            # })
-            # logger.info("✓ 터치 이벤트 활성화 완료")
-            
-            # # 4. ⭐ 중요: Emulation.setEmulatedMedia 설정
-            # self.driver.execute_cdp_cmd('Emulation.setEmulatedMedia', {
-            #     'media': 'screen',
-            #     'features': [
-            #         {'name': 'prefers-color-scheme', 'value': 'light'},
-            #         {'name': 'prefers-reduced-motion', 'value': 'no-preference'}
-            #     ]
-            # })
-            # logger.info("✓ Media 설정 완료")
-            
-            # # 5. ⭐ Client Hints 설정 (최신 Chrome에서 중요!)
-            # self.driver.execute_cdp_cmd('Emulation.setUserAgentOverride', {
-            #     'userAgent': mobile_user_agent,
-            #     'acceptLanguage': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            #     'platform': 'Linux armv8l',
-            #     'userAgentMetadata': {  # ← 이게 핵심!
-            #         'brands': [
-            #             {'brand': 'Chromium', 'version': '142'},
-            #             {'brand': 'Google Chrome', 'version': '142'},
-            #             {'brand': 'Not_A Brand', 'version': '99'}
-            #         ],
-            #         'fullVersionList': [
-            #             {'brand': 'Chromium', 'version': '142.0.7444.175'},
-            #             {'brand': 'Google Chrome', 'version': '142.0.7444.175'},
-            #             {'brand': 'Not_A Brand', 'version': '99.0.0.0'}
-            #         ],
-            #         'fullVersion': '142.0.7444.175',
-            #         'platform': 'Android',
-            #         'platformVersion': '10.0.0',
-            #         'architecture': 'arm',
-            #         'model': 'SM-G973F',
-            #         'mobile': True,
-            #         'bitness': '64'
-            #     }
-            # })
-            # logger.info("✓ Client Hints 설정 완료")
 
             # 2. 뷰포트를 모바일로 설정
             self.driver.execute_cdp_cmd('Emulation.setDeviceMetricsOverride', {
@@ -393,7 +341,7 @@ class NaverCrawler:
             if platform.system() != 'Windows':
                 return
             
-            # user_data_dir를 사용하는 Chrome 프로세스 찾기
+
             if user_data_dir:
                 return
             
@@ -414,30 +362,162 @@ class NaverCrawler:
         except Exception as e:
             logger.debug(f"[_kill_chrome_processes] 프로세스 확인 중 오류: {e}")
     
-    # def human_delay(self, min_sec=1, max_sec=3):
-    #     """사람처럼 딜레이"""
-    #     time.sleep(random.uniform(min_sec, max_sec))
-    
-    # def human_scroll(self, distance=None):
-    #     """사람처럼 스크롤"""
-    #     if distance is None:
-    #         distance = random.randint(300, 700)
-    #     self.driver.execute_script(f"window.scrollBy(0, {distance});")
-    #     self.human_delay(0.5, 1.5)
-    
-    # def human_type(self, element, text):
-    #     """사람처럼 타이핑"""
-    #     element.click()
-    #     self.human_delay(0.2, 0.5)
-    #     for char in text:
-    #         element.send_keys(char)
-    #         time.sleep(random.uniform(0.05, 0.2))
-    #     self.human_delay(0.3, 0.8)
-    
+
     def navigate_to_naver(self):
         """네이버 접속"""
         logger.info("네이버 접속 중...")
         self.driver.get("https://m.naver.com")
+
+    def replace_nnb_by_proxy_rotation(self, proxy_index=None, cookies_dir="cookies_data"):
+        """
+        (B) 프록시 로테이션할 때마다 해당 프록시 IP에 맞는 NNB 값으로 교체
+        
+        Args:
+            proxy_index: 프록시 인덱스 (None이면 현재 인스턴스의 프록시 인덱스 사용)
+            cookies_dir: 쿠키 파일이 저장된 디렉토리 경로
+        
+        Returns:
+            bool: 성공 여부
+        """
+        try:
+            # 프록시 인덱스 결정
+            if proxy_index is None:
+                if self.instance_id is not None:
+                    proxy_index = (self.instance_id - 1) % len(WHITELIST_PROXIES)
+                else:
+                    logger.error("[쿠키 교체 B] 프록시 인덱스를 결정할 수 없습니다")
+                    return False
+            
+            logger.info(f"[쿠키 교체 B] 프록시 인덱스 {proxy_index}에 해당하는 NNB 값으로 교체 시작")
+            
+            # 쿠키 디렉토리 확인 (날짜별 디렉토리도 확인)
+            if not os.path.exists(cookies_dir):
+                logger.error(f"[쿠키 교체 B] 쿠키 디렉토리를 찾을 수 없습니다: {cookies_dir}")
+                return False
+            
+            # ⭐ 날짜별 디렉토리에서 최신 날짜 찾기
+            date_dirs = []
+            for item in os.listdir(cookies_dir):
+                item_path = os.path.join(cookies_dir, item)
+                if os.path.isdir(item_path):
+                    # YYYY-MM-DD 형식인지 확인
+                    try:
+                        datetime.strptime(item, "%Y-%m-%d")
+                        date_dirs.append(item)
+                    except ValueError:
+                        pass
+            
+            # 날짜별 디렉토리가 있으면 최신 날짜 사용, 없으면 직접 cookies_dir 사용
+            search_dir = cookies_dir
+            if date_dirs:
+                date_dirs.sort(reverse=True)  # 최신 날짜 우선
+                search_dir = os.path.join(cookies_dir, date_dirs[0])
+                logger.info(f"[쿠키 교체 B] 날짜별 디렉토리 사용: {search_dir}")
+            
+            # 해당 프록시 인덱스의 쿠키 파일 찾기
+            target_proxy = WHITELIST_PROXIES[proxy_index]
+            target_proxy_str = f"{target_proxy['host']}:{target_proxy['port']}"
+            
+            logger.info(f"[쿠키 교체 B] 대상 프록시: {target_proxy_str} (인덱스: {proxy_index})")
+            
+            # 해당 프록시에 맞는 쿠키 파일 찾기 (⭐ IP:포트만으로 매칭)
+            target_cookie_data = None
+            target_cookie_file = None
+            
+            # 모든 쿠키 파일 검색
+            all_cookie_files = [f for f in os.listdir(search_dir) if f.endswith('.json')]
+            
+            for cookie_file in all_cookie_files:
+                cookie_file_path = os.path.join(search_dir, cookie_file)
+                
+                try:
+                    with open(cookie_file_path, 'r', encoding='utf-8') as f:
+                        cookie_data = json.load(f)
+                    
+                    # ⭐ IP:포트만으로 매칭 (프록시 인덱스는 무시)
+                    file_proxy = cookie_data.get('proxy')
+                    
+                    if file_proxy == target_proxy_str:
+                        target_cookie_data = cookie_data
+                        target_cookie_file = cookie_file
+                        logger.info(f"[쿠키 교체 B] 매칭된 쿠키 파일 발견: {cookie_file} (프록시: {file_proxy})")
+                        break
+                
+                except Exception as e:
+                    logger.debug(f"[쿠키 교체 B] {cookie_file} 읽기 중 오류 (무시): {e}")
+                    continue
+            
+            if not target_cookie_data:
+                logger.warning(f"[쿠키 교체 B] 프록시 {target_proxy_str}에 해당하는 쿠키 파일을 찾을 수 없습니다")
+                return False
+            
+            # NNB 값 추출
+            target_nnb = None
+            for cookie in target_cookie_data.get('cookies', []):
+                if cookie.get('name') == 'NNB':
+                    target_nnb = cookie.get('value')
+                    break
+            
+            if not target_nnb:
+                logger.warning(f"[쿠키 교체 B] {target_cookie_file}에서 NNB 값을 찾을 수 없습니다")
+                return False
+            
+            logger.info(f"[쿠키 교체 B] 대상 NNB 값: {target_nnb} (파일: {target_cookie_file})")
+            
+            # ⭐ 브라우저에 쿠키 로드 (드라이버가 있는 경우)
+            if self.driver:
+                try:
+                    # 먼저 네이버 도메인으로 이동 (쿠키 추가 전 필수)
+                    logger.info("[쿠키 교체 B] 브라우저에 쿠키 로드 중...")
+                    current_url = self.driver.current_url
+                    if 'naver.com' not in current_url:
+                        self.driver.get("https://m.naver.com")
+                        time.sleep(1)
+                    
+                    # 전체 쿠키를 브라우저에 로드
+                    cookies_loaded = 0
+                    for cookie in target_cookie_data.get('cookies', []):
+                        try:
+                            # Selenium 쿠키 형식으로 변환 (필요한 필드만)
+                            selenium_cookie = {
+                                'name': cookie.get('name'),
+                                'value': cookie.get('value'),
+                                'domain': cookie.get('domain', '.naver.com'),
+                                'path': cookie.get('path', '/'),
+                                'secure': cookie.get('secure', False),
+                                'httpOnly': cookie.get('httpOnly', False)
+                            }
+                            
+                            # expiry가 있으면 추가
+                            if 'expiry' in cookie:
+                                selenium_cookie['expiry'] = cookie['expiry']
+                            
+                            # sameSite가 있으면 추가
+                            if 'sameSite' in cookie:
+                                selenium_cookie['sameSite'] = cookie['sameSite']
+                            
+                            self.driver.add_cookie(selenium_cookie)
+                            cookies_loaded += 1
+                            
+                        except Exception as e:
+                            logger.debug(f"[쿠키 교체 B] 쿠키 추가 실패 ({cookie.get('name')}): {e}")
+                            continue
+                    
+                    logger.info(f"[쿠키 교체 B] 브라우저에 {cookies_loaded}개 쿠키 로드 완료")
+                    
+                    # 페이지 새로고침하여 쿠키 적용
+                    self.driver.refresh()
+                    time.sleep(1)
+                    
+                except Exception as e:
+                    logger.warning(f"[쿠키 교체 B] 브라우저 쿠키 로드 중 오류 (계속 진행): {e}")
+            
+            logger.info(f"[쿠키 교체 B] 완료: 프록시 {target_proxy_str}의 NNB 값으로 브라우저 쿠키 교체됨")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[쿠키 교체 B] 오류 발생: {e}", exc_info=True)
+            return False
 
     def search_keyword(self, keyword):
         """키워드 검색 (JavaScript 기반)"""
@@ -662,33 +742,106 @@ class NaverCrawler:
             logger.error(f"구매 추가정보 클릭 실패: {e}")
             return False
     
-    # def random_behavior(self):
-    #     """랜덤 브라우징 행동"""
-    #     behaviors = [
-    #         lambda: self.human_scroll(random.randint(100, 300)),
-    #         lambda: self.human_delay(1, 2),
-    #     ]
-    #     random.choice(behaviors)()
-    
-    # def check_ip_simple(self):
-    #     """간단한 IP 확인"""
-    #     try:
-    #         self.driver.get("https://api.ipify.org")
-    #         time.sleep(2)
-    #         ip = self.driver.find_element(By.TAG_NAME, "body").text.strip()
-    #         logger.info(f"[IP 확인] 현재 사용 중인 IP: {ip}")
-    #         return ip
-    #     except Exception as e:
-    #         logger.error(f"[IP 확인] 실패: {e}")
-    #         return None
+    def get_current_ip(self, retry_count=3, retry_delay=2):
+        """
+        Selenium WebDriver를 통해 현재 외부 IP 주소 확인
+        
+        Args:
+            retry_count: 재시도 횟수
+            retry_delay: 재시도 간 대기 시간
+        
+        Returns:
+            str: 외부 IP 주소, 실패 시 None
+        """
+        if not self.driver:
+            logger.warning("[IP 확인] 드라이버가 초기화되지 않았습니다")
+            return None
+        
+        services = [
+            'https://api.ipify.org',
+            'https://ifconfig.me/ip',
+            'https://icanhazip.com',
+            'https://api.ip.sb/ip',
+            'https://checkip.amazonaws.com'
+        ]
+        
+        for attempt in range(retry_count):
+            logger.info(f"[IP 확인] 외부 IP 확인 시도 {attempt + 1}/{retry_count}...")
+            
+            for service in services:
+                try:
+                    # JavaScript fetch를 사용하여 IP 확인
+                    script = f"""
+                    (async function() {{
+                        try {{
+                            const response = await fetch('{service}');
+                            const ip = await response.text();
+                            return ip.trim();
+                        }} catch (e) {{
+                            return null;
+                        }}
+                    }})();
+                    """
+                    
+                    # JavaScript 실행 (Promise 반환)
+                    ip = self.driver.execute_async_script(script)
+                    
+                    if ip and isinstance(ip, str):
+                        ip = ip.strip()
+                        # IPv4 형식 확인
+                        if ip and len(ip.split('.')) == 4:
+                            # 로컬 IP 제외
+                            if not ip.startswith('127.') and not ip.startswith('192.168.') and not ip.startswith('10.') and not ip.startswith('172.'):
+                                logger.info(f"[IP 확인] ✓ 현재 IP 확인 성공 ({service}): {ip}")
+                                return ip
+                            else:
+                                logger.debug(f"[IP 확인] 로컬 IP 감지됨: {ip}")
+                    
+                except Exception as e:
+                    logger.debug(f"[IP 확인] IP 확인 시도 실패 ({service}): {e}")
+                    continue
+            
+            if attempt < retry_count - 1:
+                logger.warning(f"[IP 확인] IP 확인 실패, {retry_delay}초 후 재시도... ({attempt + 1}/{retry_count})")
+                time.sleep(retry_delay)
+        
+        logger.warning("[IP 확인] 외부 IP를 확인할 수 없습니다.")
+        return None
+
+    def cleanup_session(self):
+        """해당 인스턴스의 세션 정리"""
+        try:
+            if not self.instance_id:
+                return  # instance_id가 없으면 정리하지 않음
+            
+            logger.info(f"[세션 정리 {self.instance_id}] 인스턴스 {self.instance_id}의 세션 정리 시작")
+            
+            # 1. user_data_dir 정리
+            if self.user_data_dir and os.path.exists(self.user_data_dir):
+                try:
+                    # 잠금 파일 먼저 삭제
+                    self._cleanup_user_data_lock(self.user_data_dir)
+                    # 디렉토리 삭제
+                    shutil.rmtree(self.user_data_dir, ignore_errors=True)
+                    logger.info(f"[세션 정리 {self.instance_id}] ✓ user_data_dir 삭제: {self.user_data_dir}")
+                except Exception as e:
+                    logger.warning(f"[세션 정리 {self.instance_id}] user_data_dir 삭제 실패: {e}")
+            else:
+                logger.debug(f"[세션 정리 {self.instance_id}] user_data_dir가 없거나 존재하지 않음")
+            
+            logger.info(f"[세션 정리 {self.instance_id}] ✓ 세션 정리 완료")
+        except Exception as e:
+            logger.error(f"[세션 정리 {self.instance_id}] 세션 정리 중 오류: {e}", exc_info=True)
     
     def close(self):
-        """드라이버 종료"""
+        """드라이버 종료 및 세션 정리"""
         if self.driver:
             try:
                 self.driver.quit()
             except:
                 pass
+        # 세션 정리도 함께 수행
+        self.cleanup_session()
 
     # NaverCrawler 클래스에 메서드 추가
     def click_by_nvmid_mobile(self, nvmid):
@@ -1263,7 +1416,6 @@ def test_single_iteration(row_data, iteration_id, headless=False):
     try:
         logger.info(f"[반복 {iteration_id}] ========================================")
         logger.info(f"[반복 {iteration_id}] 크롤러 생성 시작")
-        logger.info(f"[반복 {iteration_id}] ========================================")
         
         # 🔑 모바일 모드 전환 (nv_mid 클릭 전에 추가)
 
@@ -1275,47 +1427,53 @@ def test_single_iteration(row_data, iteration_id, headless=False):
             logger.error(f"[반복 {iteration_id}] ✗ 크롤러 생성 실패: {e}", exc_info=True)
             return False
 
-
-
-        logger.info(f"[반복 {iteration_id}] 모바일 모드로 전환 중...")
         if crawler.enable_mobile_mode():
             logger.info(f"[반복 {iteration_id}] ✓ 모바일 모드 전환 완료")
-            logger.info(f"[반복 {iteration_id}] ✓ 모바일 버전 페이지 로드 완료")
         else:
-            logger.warning(f"[반복 {iteration_id}] ⚠ 모바일 모드 전환 실패, 계속 진행...")                
-        # 네이버 접속 # 검색어 삭제 클릭으로 바꾸기
+            logger.warning(f"[반복 {iteration_id}] ⚠ 모바일 모드 전환 실패, 계속 진행...")
         crawler.navigate_to_naver()
 
+        # ⭐ 쿠키 로드 추가
+        try:
+            crawler.replace_nnb_by_proxy_rotation()
+            logger.info(f"[반복 {iteration_id}] ✓ navigate_to_naver() 후 쿠키 재로드 완료")
+        except Exception as e:
+            logger.warning(f"[반복 {iteration_id}] ⚠ 쿠키 재로드 실패 (계속 진행): {e}")
+        
         # 메인 키워드 검색
         if 'main_keyword' in row_data and pd.notna(row_data['main_keyword']):
             crawler.search_keyword(row_data['main_keyword'])
             time.sleep(4)
 
         # 새 검색어로 검색
-        # 그냥 네이버로 네비게이션 검색 전과 후의 id 는 계속 달라집니다. -- 바뀔 가능성이 있음. 
         crawler.navigate_to_naver()
+        try:
+            crawler.replace_nnb_by_proxy_rotation()
+            logger.info(f"[반복 {iteration_id}] ✓ 두 번째 navigate_to_naver() 후 쿠키 재로드 완료")
+        except Exception as e:
+            logger.warning(f"[반복 {iteration_id}] ⚠ 쿠키 재로드 실패 (계속 진행): {e}")
         if crawler.enable_mobile_mode():
             logger.info(f"[반복 {iteration_id}] ✓ 모바일 모드 전환 완료")
-            logger.info(f"[반복 {iteration_id}] ✓ 모바일 버전 페이지 로드 완료")
         else:
             logger.warning(f"[반복 {iteration_id}] ⚠ 모바일 모드 전환 실패, 계속 진행...")                
         time.sleep(3)
         if 'base_search_keyword' in row_data and pd.notna(row_data['base_search_keyword']):
             crawler.search_keyword(row_data['base_search_keyword'])
             time.sleep(4)
-        # nvmid로 상품 클릭
+
         if 'nv_mid' in row_data and pd.notna(row_data['nv_mid']):
             crawler.click_by_nvmid(str(row_data['nv_mid']))
-            # crawler.click_by_nvmid_mobile(str(row_data['nv_mid']))
         time.sleep(3)
 
         # 구매 추가정보 버튼 클릭
         crawler.click_purchase_additional_info()
         time.sleep(4)
-        
-        logger.info(f"[반복 {iteration_id}] 크롤링 완료")
+        logger.info(f"[반복 {iteration_id}] 구매추가 버튼 클릭완료")
         return True
-        
+        crawler.cleanup_session()
+        current_ip = crawler.get_current_ip()
+        if current_ip:
+            logger.info(f"[반복 {iteration_id}] 현재 IP: {current_ip}")
     except Exception as e:
         logger.error(f"[반복 {iteration_id}] 오류: {e}", exc_info=True)
         return False
@@ -1324,16 +1482,12 @@ def test_single_iteration(row_data, iteration_id, headless=False):
             crawler.close()
 
 
-def main():
+def main(process_id=None, run_id=None):
     """메인 함수"""
     # 시작 시간 기록
     start_time = datetime.now()
     start_time_str = start_time.strftime("%Y-%m-%d %H:%M:%S")
     
-    logger.info("=" * 50)
-    logger.info("일반 셀레니움 크롤링 테스트 시작")
-    logger.info(f"시작 시간: {start_time_str}")
-    logger.info("=" * 50)
     # change_ip()
     time.sleep(4)
     # CSV 파일 경로
@@ -1359,8 +1513,8 @@ def main():
         logger.error("CSV 파일을 읽을 수 없습니다")
         return
     
-    # 병렬 크롤링 실행 (0.5초 딜레이로 여러 Chrome 인스턴스 동시 생성)
-    max_workers = 5  # 동시 실행할 최대 작업 수 (필요에 따라 조정)
+    # 병렬 크롤링 실행 (2초 딜레이로 여러 Chrome 인스턴스 동시 생성)
+    max_workers = 6  # 동시 실행할 최대 작업 수 (필요에 따라 조정) 5-> 6개로 늘림. 각 프로세스당 6개의 크롬 인스턴스 생성
     
     try:
         results = []
@@ -1370,13 +1524,15 @@ def main():
             
             # 모든 작업을 스레드 풀에 제출 (0.5초 딜레이로)
             for idx, row in df.iterrows():
-                iteration_id = idx + 1
-                
-                # 0.5초 딜레이를 주면서 작업 제출
+                # ⭐ 고유한 iteration_id 생성
+                if process_id is not None and run_id is not None:
+                    iteration_id = process_id * 10000 + run_id * 1000 + (idx + 1)
+                else:
+                    iteration_id = idx + 1                
+                # 2초 딜레이를 주면서 작업 제출 크롬 인스턴스 생성 대기
                 if idx > 0:
-                    time.sleep(0.5)
-                
-                logger.info(f"[작업 제출] 반복 {iteration_id}/{len(df)} 작업 제출 중...")
+                    time.sleep(2)               
+                logger.info(f"[작업 제출] 반복 {iteration_id}/{len(df)} 작업 제출 크롬 인스턴스 생성중...")
                 future = executor.submit(test_single_iteration, row, iteration_id, False)
                 futures_dict[future] = iteration_id
             
@@ -1421,8 +1577,10 @@ def main():
     except Exception as e:
         logger.error(f"크롤링 중 오류: {e}", exc_info=True)
     finally:
-        # ⭐ 모든 쓰레드가 끝난 후 Chrome 세션 및 쿠키 정리
-        cleanup_all_chrome_sessions()
+        # ⭐ 각 워커가 완료될 때마다 세션 정리를 하므로,
+        # 여기서는 남은 세션이 있는지 확인 후 정리 (안전장치)
+        logger.info("[최종 정리] 남은 세션 확인 중...")
+        cleanup_all_chrome_sessions()  # 남은 세션이 있을 수 있으므로 유지
         
         # 종료 시간 기록 및 파일 저장
         end_time = datetime.now()
@@ -1451,18 +1609,24 @@ def run_main_process(start_run, end_run, process_id):
     """각 프로세스에서 실행할 함수"""
     logger.info(f"[프로세스 {process_id}] 실행 범위: {start_run + 1} ~ {end_run}")
     
-    execution_log = []
     process_start_time = datetime.now()
+    first_run_start_time = None
+    last_run_end_time = None
     
     for run_id in range(start_run, end_run):
         run_start_time = datetime.now()
+        
+        # 최초 실행 시간 기록
+        if first_run_start_time is None:
+            first_run_start_time = run_start_time
+        
         logger.info("=" * 60)
         logger.info(f"[프로세스 {process_id}] === 실행 {run_id + 1} ===")
         logger.info(f"시작 시간: {run_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info("=" * 60)
         
         try:
-            main()
+            main(process_id=process_id, run_id=run_id)
             run_end_time = datetime.now()
             run_elapsed = (run_end_time - run_start_time).total_seconds()
             
@@ -1594,6 +1758,8 @@ if __name__ == '__main__':
     
     logger.info("=" * 60)
     logger.info("모든 프로세스 완료")
+    logger.info(f"전체 시작 시간: {total_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"전체 종료 시간: {total_end_time.strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info(f"전체 실행 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.2f}분)")
     logger.info(f"전체 실행 시간 기록 저장: {time_log_file}")
     logger.info("=" * 60)

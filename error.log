@@ -34,3 +34,4 @@ Traceback (most recent call last):
   File "C:\Users\dev\AppData\Local\Programs\Python\Python38\lib\asyncio\proactor_events.py", line 679, in close
     signal.set_wakeup_fd(-1)
 ValueError: set_wakeup_fd only works in main thread
+2025-12-02 09:59:24,677 - ERROR - collect_naver_cookies.py 실행 타임아웃

@@ -445,13 +445,11 @@ class NaverCrawler:
             logger.error(f"검색 실패: {e}", exc_info=True)
             raise
 
-    # 함수 정의 (410번째 줄 전에 추가)
     def search_base_keyword(self, base_keyword):
         """
-        기본 검색어를 검색창에 입력하는 함수
+        기본 검색어를 검색창에 입력하는 함수 (기존 search_keyword와 동일한 방식)
         
         Args:
-            chrome_dt: ChromeDevTools 인스턴스
             base_keyword: 입력할 기본 검색어
         
         Returns:
@@ -459,79 +457,161 @@ class NaverCrawler:
         """
         try:
             logger.info(f"새 기본 검색어 입력: {base_keyword}")
-
-            clear_and_search_script = f"""
+            
+            # 1. 검색창에 키워드 입력 (JavaScript - search_keyword와 동일한 방식)
+            search_input_script = f"""
             (function() {{
-                // CSS 선택자로 먼저 시도
                 var searchInput = document.querySelector('#nx_query') ||
                                 document.querySelector('#query') || 
                                 document.querySelector('input.sch_input') ||
-                                document.querySelector('input[type="search"]') ||
-                                document.querySelector('input[type="search"][name="query"]') ||
-                                document.querySelector('input[placeholder*="검색"]') ||
-                                document.querySelector('input[name="query"]') ||
-                                document.querySelector('.search_input');
-                
-                // CSS 선택자로 찾지 못하면 XPath 절대 경로로 시도
-                if (!searchInput) {{
-                    try {{
-                        var xpathResult = document.evaluate(
-                            '//input[@id="nx_query" or @id="query" or contains(@placeholder, "검색") or @type="search"]',
-                            document,
-                            null,
-                            XPathResult.FIRST_ORDERED_NODE_TYPE,
-                            null
-                        );
-                        if (xpathResult.singleNodeValue) {{
-                            searchInput = xpathResult.singleNodeValue;
-                        }}
-                    }} catch (e) {{
-                        console.log('XPath 검색 실패: ' + e);
-                    }}
-                }}
-                
+                                document.querySelector('input[type="search"]');
                 if (searchInput) {{
                     searchInput.focus();
                     searchInput.click();
-                    searchInput.value = '';              
+                    searchInput.value = '';
                     searchInput.value = '{base_keyword}';
-
-                    // 버블링 없이 이벤트 발생 (직접 처리)
-                    var inputEvent = new Event('input', {{ bubbles: false, cancelable: true }});
-                    searchInput.dispatchEvent(inputEvent);
-                    
-                    // change 이벤트도 발생
-                    var changeEvent = new Event('change', {{ bubbles: false, cancelable: true }});
-                    searchInput.dispatchEvent(changeEvent);
+                    searchInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
                     return true;
                 }}
                 return false;
             }})();
-            """            
-            result = self.driver.execute_script(clear_and_search_script)
-            
+            """
+            result = self.driver.execute_script(search_input_script)
             if result:
                 logger.info(f"✓ 기본 검색어 입력 완료: {base_keyword}")
-                time.sleep(2)
+                time.sleep(1)
             else:
-                logger.warning("⚠ 기본 검색어 입력 실패")
+                logger.warning("⚠ 검색창을 찾지 못했습니다.")
                 time.sleep(2)
                 return False
-
-            # ⭐ base_keyword용 검색 버튼 클릭 (btn_search 클래스 사용)                
+            
+            # 2. 검색 버튼 클릭 시도 (base_keyword용 - DOM 로드 대기 및 부모 div 체크)
             search_button_script = """
             (function() {
-                // base_keyword 검색 버튼 (btn_search 클래스 우선)
-                var searchButton = document.querySelector('button.btn_search') ||
-                                document.querySelector('button.btn_search[type="submit"]') ||
-                                document.querySelector('#nx_search_form button.btn_search') ||
-                                document.querySelector('#nx_search_form button[type="submit"]') ||
-                                document.querySelector('#sch_w > div > form > button') ||
-                                document.querySelector('button[type="submit"]');
+                // ⭐ DOM 로드 대기 (최대 5초)
+                var maxWait = 5000;
+                var startTime = Date.now();
+                var searchButton = null;
+                var voiceButton = null;
+                
+                // DOM이 완전히 로드될 때까지 대기
+                while ((Date.now() - startTime) < maxWait) {
+                    // document.readyState 확인
+                    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                        // btn_voice 버튼 찾기
+                        voiceButton = document.querySelector('button.btn_voice');
+                        
+                        if (voiceButton) {
+                            // 방법 1: btn_voice의 형제 요소로 btn_search 찾기
+                            var nextSibling = voiceButton.nextElementSibling;
+                            if (nextSibling && nextSibling.classList && nextSibling.classList.contains('btn_search')) {
+                                searchButton = nextSibling;
+                                break;
+                            }
+                            
+                            // 방법 2: btn_voice의 부모 요소들 체크 (div 포함)
+                            var currentParent = voiceButton.parentElement;
+                            var depth = 0;
+                            while (currentParent && depth < 5) { // 최대 5단계 부모까지 체크
+                                // 부모 div에서 btn_search 찾기
+                                var btnSearch = currentParent.querySelector('button.btn_search[type="submit"]');
+                                if (btnSearch) {
+                                    searchButton = btnSearch;
+                                    break;
+                                }
+                                
+                                // 부모의 형제 요소들도 체크
+                                var siblings = currentParent.parentElement ? currentParent.parentElement.children : [];
+                                for (var i = 0; i < siblings.length; i++) {
+                                    var sibling = siblings[i];
+                                    if (sibling !== currentParent) {
+                                        var btnInSibling = sibling.querySelector('button.btn_search[type="submit"]');
+                                        if (btnInSibling) {
+                                            searchButton = btnInSibling;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (searchButton) break;
+                                
+                                currentParent = currentParent.parentElement;
+                                depth++;
+                            }
+                            
+                            if (searchButton) break;
+                        }
+                        
+                        // 방법 3: 직접 btn_search 찾기 (DOM 로드 후)
+                        searchButton = document.querySelector('button.btn_search[type="submit"]') ||
+                                      document.querySelector('button.btn_search');
+                        
+                        if (searchButton) break;
+                    }
+                    
+                    // 100ms 대기 후 재시도
+                    var waitUntil = Date.now() + 100;
+                    while (Date.now() < waitUntil) {
+                        // busy wait
+                    }
+                }
+                
+                // 방법 4: 추가 선택자들 (DOM 로드 후)
+                if (!searchButton) {
+                    searchButton = document.querySelector('#nx_search_form button.btn_search') ||
+                                  document.querySelector('#nx_search_form button[type="submit"]') ||
+                                  document.querySelector('button.sch_btn_search') ||
+                                  document.querySelector('button.MM_SEARCH_SUBMIT') ||
+                                  document.querySelector('#sch_w > div > form > button') ||
+                                  document.querySelector('button[type="submit"]');
+                }
+                
+                // 부모 div 요소들에서도 찾기 시도
+                if (!searchButton) {
+                    // 모든 div 요소에서 btn_search 찾기
+                    var allDivs = document.querySelectorAll('div');
+                    for (var i = 0; i < allDivs.length; i++) {
+                        var div = allDivs[i];
+                        var btnInDiv = div.querySelector('button.btn_search[type="submit"]');
+                        if (btnInDiv) {
+                            searchButton = btnInDiv;
+                            break;
+                        }
+                    }
+                }
                 
                 if (searchButton) {
-                    searchButton.click();
-                    return true;
+                    // 버튼이 보이도록 스크롤
+                    if (searchButton.offsetParent === null) {
+                        searchButton.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        var scrollWait = 500;
+                        var scrollWaitUntil = Date.now() + scrollWait;
+                        while (Date.now() < scrollWaitUntil) {
+                            // busy wait
+                        }
+                    }
+                    
+                    try {
+                        searchButton.click();
+                        return {success: true, method: 'direct_click'};
+                    } catch (e1) {
+                        try {
+                            // JavaScript 클릭 시도
+                            searchButton.dispatchEvent(new MouseEvent('click', {
+                                bubbles: true,
+                                cancelable: true,
+                                view: window
+                            }));
+                            return {success: true, method: 'js_click'};
+                        } catch (e2) {
+                            // form submit 시도
+                            var form = searchButton.closest('form');
+                            if (form) {
+                                form.submit();
+                                return {success: true, method: 'form_submit'};
+                            }
+                        }
+                    }
                 }
                 
                 // 버튼을 찾지 못하면 form submit 시도
@@ -542,45 +622,93 @@ class NaverCrawler:
                     var form = searchInput.closest('form');
                     if (form) {
                         form.submit();
-                        return true;
+                        return {success: true, method: 'input_form_submit'};
                     }
                 }
                 
-                return false;
+                return {success: false, reason: 'button_not_found'};
             })();
             """
-            time.sleep(1)
+            time.sleep(1)  # DOM 로드 대기
             
             button_result = self.driver.execute_script(search_button_script)
-            if button_result:
-                logger.info("✓ 기본 검색어 검색 버튼 클릭 완료")
+            if button_result and button_result.get('success'):
+                method = button_result.get('method', 'unknown')
+                logger.info(f"✓ 기본 검색어 검색 버튼 클릭 완료 (방법: {method})")
             else:
+                # 3. Enter 키 이벤트 시도 (search_keyword와 동일한 방식)
                 logger.warning("⚠ 검색 버튼을 찾지 못했습니다. Enter 키 시도...")
-                # Enter 키 이벤트 시도
                 enter_key_script = """
                 (function() {
-                    var searchInput = document.querySelector('#nx_query') ||
-                                    document.querySelector('#query') || 
-                                    document.querySelector('input.sch_input');
+                    // DOM 로드 대기
+                    var maxWait = 3000;
+                    var startTime = Date.now();
+                    var searchInput = null;
+                    
+                    while ((Date.now() - startTime) < maxWait) {
+                        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                            searchInput = document.querySelector('#nx_query') ||
+                                        document.querySelector('#query') || 
+                                        document.querySelector('input.sch_input');
+                            if (searchInput) break;
+                        }
+                        
+                        var waitUntil = Date.now() + 100;
+                        while (Date.now() < waitUntil) {}
+                    }
+                    
                     if (searchInput) {
-                        var e = new KeyboardEvent('keydown', {
+                        // 포커스 확인 및 재설정
+                        searchInput.focus();
+                        searchInput.click();
+                        
+                        // Enter 키 이벤트 발생 (keydown, keypress, keyup 모두)
+                        var keydownEvent = new KeyboardEvent('keydown', {
                             key: 'Enter',
                             code: 'Enter',
                             keyCode: 13,
-                            bubbles: true
+                            which: 13,
+                            bubbles: true,
+                            cancelable: true
                         });
-                        searchInput.dispatchEvent(e);
+                        searchInput.dispatchEvent(keydownEvent);
+                        
+                        var keypressEvent = new KeyboardEvent('keypress', {
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            which: 13,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        searchInput.dispatchEvent(keypressEvent);
+                        
+                        var keyupEvent = new KeyboardEvent('keyup', {
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            which: 13,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        searchInput.dispatchEvent(keyupEvent);
+                        
                         return true;
                     }
                     return false;
                 })();
                 """
-                self.driver.execute_script(enter_key_script)
+                enter_result = self.driver.execute_script(enter_key_script)
+                if enter_result:
+                    logger.info("✓ Enter 키 이벤트 발생 완료")
+                else:
+                    logger.warning("⚠ Enter 키 이벤트도 실패했습니다")
             
-            time.sleep(3)  # 검색 결과 로딩 대기         
-            # SEARCH 까지 확인.    
+            time.sleep(3)  # 검색 결과 로딩 대기
+            return True
+            
         except Exception as e:
-            logger.error(f"기본 검색어 입력 실패: {e}")
+            logger.error(f"기본 검색어 입력 실패: {e}", exc_info=True)
             return False
 
     def click_by_nvmid(self, nvmid):
